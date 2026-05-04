@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Survey</title>
+  <title>Device Info</title>
   <style>
     :root {
       --bg: #f2f2f7;
@@ -15,17 +15,25 @@
       --accent: #0071e3;
       --accent-active: #005bb5;
       --border: #e5e5ea;
-      --danger: #ff3b30;
       --success: #34c759;
       --radius: 14px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #000000;
+        --card: #1c1c1e;
+        --text: #ffffff;
+        --text-secondary: #8e8e93;
+        --border: #38383a;
+      }
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     html {
-      scroll-behavior: smooth;
       overscroll-behavior: none;
       -webkit-overflow-scrolling: touch;
     }
@@ -35,256 +43,111 @@
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-      padding: calc(var(--safe-top) + 24px) 20px calc(var(--safe-bottom) + 32px);
+      padding: calc(var(--safe-top) + 20px) 16px calc(var(--safe-bottom) + 40px);
       min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
+    }
+
+    h1 {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      padding: 20px 4px 8px;
+    }
+
+    .subtitle {
+      font-size: 15px;
+      color: var(--text-secondary);
+      padding: 0 4px 24px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-secondary);
+      padding: 24px 4px 8px;
     }
 
     .card {
       background: var(--card);
       border-radius: var(--radius);
-      box-shadow: 0 0 0 0.5px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.06);
-      width: 100%;
-      max-width: 420px;
-      padding: 32px 24px;
-      animation: fadeUp 0.4s ease-out;
+      overflow: hidden;
     }
 
-    .card-header {
-      text-align: center;
-      margin-bottom: 28px;
-    }
-
-    .card-header h1 {
-      font-size: 22px;
-      font-weight: 600;
-      letter-spacing: -0.01em;
-    }
-
-    .card-header p {
-      font-size: 15px;
-      color: var(--text-secondary);
-      margin-top: 6px;
-    }
-
-    .field {
-      margin-bottom: 20px;
-    }
-
-    .field:last-of-type {
-      margin-bottom: 28px;
-    }
-
-    label {
-      display: block;
-      font-size: 15px;
-      font-weight: 500;
-      margin-bottom: 8px;
-    }
-
-    input, textarea, select {
-      width: 100%;
-      padding: 12px 14px;
-      font-size: 17px;
-      font-family: inherit;
-      color: var(--text);
-      background: #f5f5f7;
-      border: 1.5px solid transparent;
-      border-radius: 10px;
-      outline: none;
-      -webkit-appearance: none;
-      appearance: none;
-      transition: border-color 0.2s ease, background 0.2s ease;
-    }
-
-    input:focus, textarea:focus, select:focus {
-      border-color: var(--accent);
-      background: var(--card);
-    }
-
-    input::placeholder, textarea::placeholder {
-      color: #aeaeb2;
-    }
-
-    textarea {
-      resize: vertical;
-      min-height: 100px;
-      line-height: 1.45;
-    }
-
-    .error-msg {
-      font-size: 13px;
-      color: var(--danger);
-      margin-top: 6px;
-      display: none;
-    }
-
-    .field.has-error input,
-    .field.has-error textarea {
-      border-color: var(--danger);
-    }
-
-    .field.has-error .error-msg {
-      display: block;
-    }
-
-    .btn {
-      width: 100%;
-      padding: 15px;
-      font-size: 17px;
-      font-weight: 600;
-      font-family: inherit;
-      color: #fff;
-      background: var(--accent);
-      border: none;
-      border-radius: 10px;
-      cursor: pointer;
-      -webkit-appearance: none;
-      appearance: none;
-      transition: background 0.15s ease, transform 0.1s ease;
-      touch-action: manipulation;
-    }
-
-    .btn:active {
-      background: var(--accent-active);
-      transform: scale(0.985);
-    }
-
-    .btn:disabled {
-      opacity: 0.4;
-      pointer-events: none;
-    }
-
-    /* Success state */
-    .success-view {
-      display: none;
-      text-align: center;
-      padding: 20px 0;
-      animation: fadeUp 0.35s ease-out;
-    }
-
-    .success-view .icon {
-      width: 56px;
-      height: 56px;
-      background: var(--success);
-      border-radius: 50%;
+    .row {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      margin: 0 auto 20px;
+      padding: 13px 16px;
     }
 
-    .success-view .icon svg {
-      width: 28px;
-      height: 28px;
-      stroke: #fff;
-      stroke-width: 2.5;
-      fill: none;
+    .row + .row {
+      border-top: 0.5px solid var(--border);
     }
 
-    .success-view h2 {
-      font-size: 20px;
-      font-weight: 600;
-      margin-bottom: 8px;
+    .row .label {
+      font-size: 17px;
+      color: var(--text);
     }
 
-    .success-view p {
-      font-size: 15px;
+    .row .value {
+      font-size: 17px;
       color: var(--text-secondary);
+      text-align: right;
+      max-width: 60%;
+      word-break: break-word;
     }
 
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(12px); }
-      to { opacity: 1; transform: translateY(0); }
+    .row .value.green {
+      color: var(--success);
     }
   </style>
 </head>
 <body>
+
+  <h1>Device Info</h1>
+  <p class="subtitle">What your browser reveals on first visit.</p>
+
+  <div class="section-title">Device</div>
   <div class="card">
-    <form id="surveyForm">
-      <div class="card-header">
-        <h1>Quick Survey</h1>
-        <p>We'd love to hear from you.</p>
-      </div>
+    <div class="row"><span class="label">Platform</span><span class="value" id="platform"></span></div>
+    <div class="row"><span class="label">User Agent</span><span class="value" id="ua"></span></div>
+    <div class="row"><span class="label">Language</span><span class="value" id="lang"></span></div>
+    <div class="row"><span class="label">CPU Cores</span><span class="value" id="cores"></span></div>
+    <div class="row"><span class="label">Memory (GB)</span><span class="value" id="mem"></span></div>
+    <div class="row"><span class="label">Touch Support</span><span class="value" id="touch"></span></div>
+  </div>
 
-      <div class="field" id="nameField">
-        <label for="name">Name</label>
-        <input type="text" id="name" name="name" placeholder="Your name" autocomplete="name" required>
-        <div class="error-msg">Please enter your name.</div>
-      </div>
+  <div class="section-title">Screen</div>
+  <div class="card">
+    <div class="row"><span class="label">Width</span><span class="value" id="width"></span></div>
+    <div class="row"><span class="label">Height</span><span class="value" id="height"></span></div>
+    <div class="row"><span class="label">Pixel Ratio</span><span class="value" id="dpr"></span></div>
+    <div class="row"><span class="label">Color Depth</span><span class="value" id="color"></span></div>
+    <div class="row"><span class="label">Dark Mode</span><span class="value green" id="dark"></span></div>
+  </div>
 
-      <div class="field" id="emailField">
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" placeholder="you@example.com" autocomplete="email" required>
-        <div class="error-msg">Please enter a valid email.</div>
-      </div>
-
-      <div class="field" id="feedbackField">
-        <label for="feedback">Feedback</label>
-        <textarea id="feedback" name="feedback" placeholder="Share your thoughts..." required></textarea>
-        <div class="error-msg">Please share some feedback.</div>
-      </div>
-
-      <button type="submit" class="btn" id="submitBtn">Submit</button>
-    </form>
-
-    <div class="success-view" id="successView">
-      <div class="icon">
-        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-      </div>
-      <h2>Thank you!</h2>
-      <p>Your response has been submitted.</p>
-    </div>
+  <div class="section-title">Network</div>
+  <div class="card">
+    <div class="row"><span class="label">Status</span><span class="value green" id="online"></span></div>
   </div>
 
   <script>
-    const form = document.getElementById('surveyForm');
-    const successView = document.getElementById('successView');
-    const submitBtn = document.getElementById('submitBtn');
+    document.getElementById('platform').textContent = navigator.platform || '—';
+    document.getElementById('ua').textContent = navigator.userAgent;
+    document.getElementById('lang').textContent = navigator.language;
+    document.getElementById('cores').textContent = navigator.hardwareConcurrency || '—';
+    document.getElementById('mem').textContent = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '—';
+    document.getElementById('touch').textContent = ('ontouchstart' in window) ? 'Yes' : 'No';
 
-    function setError(fieldId, show) {
-      const field = document.getElementById(fieldId);
-      field.classList.toggle('has-error', show);
-    }
+    document.getElementById('width').textContent = screen.width + 'px';
+    document.getElementById('height').textContent = screen.height + 'px';
+    document.getElementById('dpr').textContent = window.devicePixelRatio + 'x';
+    document.getElementById('color').textContent = screen.colorDepth + '-bit';
+    document.getElementById('dark').textContent = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'On' : 'Off';
 
-    function isValidEmail(email) {
-      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-    }
-
-    form.addEventListener('submit', function(e) {
-      e.preventDefault();
-
-      const name = document.getElementById('name').value.trim();
-      const email = document.getElementById('email').value.trim();
-      const feedback = document.getElementById('feedback').value.trim();
-
-      let valid = true;
-
-      if (!name) { setError('nameField', true); valid = false; } else { setError('nameField', false); }
-      if (!isValidEmail(email)) { setError('emailField', true); valid = false; } else { setError('emailField', false); }
-      if (!feedback) { setError('feedbackField', true); valid = false; } else { setError('feedbackField', false); }
-
-      if (!valid) return;
-
-      submitBtn.disabled = true;
-      submitBtn.textContent = 'Submitting...';
-
-      setTimeout(function() {
-        form.style.display = 'none';
-        successView.style.display = 'block';
-      }, 600);
-    });
-
-    document.querySelectorAll('input, textarea').forEach(function(el) {
-      el.addEventListener('input', function() {
-        var field = this.closest('.field');
-        if (field) field.classList.remove('has-error');
-      });
-    });
+    document.getElementById('online').textContent = navigator.onLine ? 'Online' : 'Offline';
   </script>
 </body>
 </html>
