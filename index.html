@@ -5,144 +5,294 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Permission Explorer</title>
+  <title>iOS Media Architecture</title>
   <style>
     :root {
       --bg: #f2f2f7;
-      --card: #ffffff;
+      --bg-elevated: #ffffff;
+      --bg-code: #f5f5f7;
       --text: #1d1d1f;
       --text-secondary: #86868b;
+      --text-tertiary: #aeaeb2;
       --accent: #0071e3;
       --accent-active: #005bb5;
+      --accent-light: #e8f0fe;
       --border: #e5e5ea;
       --green: #34c759;
       --red: #ff3b30;
       --orange: #ff9500;
-      --code-bg: #f5f5f7;
+      --purple: #af52de;
       --radius: 14px;
+      --radius-sm: 10px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
+      --shadow: 0 0 0 0.5px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.06);
+      --mono: "SF Mono", "Menlo", "Consolas", monospace;
     }
 
     @media (prefers-color-scheme: dark) {
       :root {
         --bg: #000000;
-        --card: #1c1c1e;
-        --text: #ffffff;
+        --bg-elevated: #1c1c1e;
+        --bg-code: #2c2c2e;
+        --text: #f5f5f7;
         --text-secondary: #8e8e93;
+        --text-tertiary: #636366;
         --border: #38383a;
-        --code-bg: #2c2c2e;
+        --accent-light: #1a2a3a;
+        --shadow: 0 0 0 0.5px rgba(255,255,255,0.06), 0 2px 12px rgba(0,0,0,0.4);
       }
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    html { overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
+    html {
+      scroll-behavior: smooth;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: touch;
+      scroll-padding-top: calc(var(--safe-top) + 70px);
+    }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      padding: calc(var(--safe-top) + 16px) 14px calc(var(--safe-bottom) + 60px);
+      -moz-osx-font-smoothing: grayscale;
+      padding: calc(var(--safe-top) + 16px) 16px calc(var(--safe-bottom) + 80px);
+      max-width: 720px;
+      margin: 0 auto;
     }
 
+    /* ===== TYPOGRAPHY ===== */
     h1 {
-      font-size: 30px;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      line-height: 1.15;
+      padding: 12px 0 6px;
+    }
+
+    h2 {
+      font-size: 22px;
       font-weight: 700;
       letter-spacing: -0.02em;
-      padding: 20px 4px 4px;
+      margin-bottom: 6px;
     }
 
-    .subtitle {
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p, .body-text {
       font-size: 15px;
+      line-height: 1.6;
       color: var(--text-secondary);
-      padding: 0 4px 8px;
-      line-height: 1.45;
     }
 
-    /* Layer cards */
-    .layer {
-      background: var(--card);
-      border-radius: var(--radius);
-      overflow: hidden;
-      margin-top: 20px;
-    }
+    p + p, .body-text + .body-text { margin-top: 10px; }
 
-    .layer-header {
-      padding: 16px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
+    strong { color: var(--text); }
 
-    .layer-badge {
+    code {
+      font-family: var(--mono);
       font-size: 13px;
-      font-weight: 700;
-      color: #fff;
-      background: var(--accent);
-      border-radius: 6px;
-      padding: 3px 8px;
-      white-space: nowrap;
-      letter-spacing: 0.02em;
+      background: var(--bg-code);
+      padding: 2px 6px;
+      border-radius: 5px;
     }
 
-    .layer-title {
+    .section-intro {
+      font-size: 17px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+      padding-bottom: 16px;
+      border-bottom: 0.5px solid var(--border);
+      margin-bottom: 20px;
+    }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .card-body { padding: 16px; }
+    .card-body + .card-body { border-top: 0.5px solid var(--border); }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-label {
+      font-size: 13px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: var(--text-tertiary);
+      padding: 28px 0 8px;
+    }
+
+    /* ===== ARCHITECTURE STACK ===== */
+    .arch-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 16px 0;
+    }
+
+    .arch-layer {
+      position: relative;
+      padding: 16px;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+      border-left: 3px solid transparent;
+    }
+
+    .arch-layer:first-child { border-radius: var(--radius) var(--radius) 0 0; }
+    .arch-layer:last-child { border-radius: 0 0 var(--radius) var(--radius); }
+    .arch-layer + .arch-layer { border-top: 0.5px solid var(--border); }
+
+    .arch-layer:hover { background: var(--bg-code); }
+    .arch-layer.active { background: var(--accent-light); border-left-color: var(--accent); }
+
+    .arch-layer .layer-tag {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+    }
+
+    .arch-layer .layer-name {
       font-size: 17px;
       font-weight: 600;
     }
 
-    .layer-body {
-      padding: 0 16px 16px;
-    }
-
-    .layer-desc {
-      font-size: 15px;
-      color: var(--text-secondary);
-      line-height: 1.5;
-      margin-bottom: 14px;
-    }
-
-    .layer-diagram {
-      background: var(--code-bg);
-      border-radius: 10px;
-      padding: 14px;
-      margin-bottom: 14px;
+    .arch-layer .layer-desc {
       font-size: 14px;
-      line-height: 1.7;
       color: var(--text-secondary);
-      font-family: "SF Mono", "Menlo", monospace;
+      margin-top: 2px;
     }
 
-    .layer-diagram .hl { color: var(--accent); font-weight: 600; }
-    .layer-diagram .hl-green { color: var(--green); }
-    .layer-diagram .hl-red { color: var(--red); }
-    .layer-diagram .hl-orange { color: var(--orange); }
+    .arch-layer .expand-icon {
+      position: absolute;
+      right: 16px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 18px;
+      color: var(--text-tertiary);
+      transition: transform 0.2s ease;
+    }
 
+    .arch-layer.active .expand-icon { transform: translateY(-50%) rotate(90deg); }
+
+    .arch-detail {
+      display: none;
+      padding: 0 16px 16px;
+      font-size: 14px;
+      line-height: 1.65;
+      color: var(--text-secondary);
+      border-top: 0.5px solid var(--border);
+    }
+
+    .arch-detail.show { display: block; }
+
+    .arch-detail h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+      margin-top: 14px;
+    }
+
+    .arch-detail h4:first-child { margin-top: 0; }
+
+    .arch-detail ul {
+      padding-left: 18px;
+      margin: 6px 0;
+    }
+
+    .arch-detail li { margin-bottom: 4px; }
+
+    .arch-detail .detail-code {
+      background: var(--bg-code);
+      border-radius: var(--radius-sm);
+      padding: 12px;
+      margin: 10px 0;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre;
+      overflow-x: auto;
+      color: var(--text);
+    }
+
+    /* ===== FLOW DIAGRAM ===== */
+    .flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+      margin: 14px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: var(--bg-code);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .flow-step:first-child { border-radius: var(--radius-sm) var(--radius-sm) 0 0; }
+    .flow-step:last-child { border-radius: 0 0 var(--radius-sm) var(--radius-sm); }
+    .flow-step + .flow-step { border-top: 0.5px solid var(--border); }
+
+    .flow-num {
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 20px;
+      font-size: 13px;
+      margin-top: 1px;
+    }
+
+    .flow-arrow {
+      text-align: center;
+      color: var(--text-tertiary);
+      padding: 1px 0;
+      font-size: 14px;
+    }
+
+    /* ===== CODE BLOCKS ===== */
     .code-block {
-      background: var(--code-bg);
-      border-radius: 10px;
+      background: var(--bg-code);
+      border-radius: var(--radius-sm);
       padding: 14px;
-      margin-bottom: 14px;
+      margin: 12px 0;
+      font-family: var(--mono);
       font-size: 13px;
       line-height: 1.65;
-      font-family: "SF Mono", "Menlo", monospace;
       overflow-x: auto;
       white-space: pre;
       color: var(--text);
     }
 
+    /* ===== BUTTONS ===== */
     .btn {
       display: block;
       width: 100%;
-      padding: 13px;
+      padding: 14px;
       font-size: 17px;
       font-weight: 600;
       font-family: inherit;
       color: #fff;
       background: var(--accent);
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       cursor: pointer;
       -webkit-appearance: none;
       touch-action: manipulation;
@@ -154,21 +304,18 @@
     .btn.green { background: var(--green); }
     .btn.red { background: var(--red); }
 
-    .btn-row {
-      display: flex;
-      gap: 10px;
-    }
-
+    .btn-row { display: flex; gap: 10px; margin-top: 12px; }
     .btn-row .btn { flex: 1; }
 
+    /* ===== RESULT OUTPUT ===== */
     .result {
       margin-top: 12px;
       padding: 12px;
-      background: var(--code-bg);
-      border-radius: 10px;
-      font-size: 14px;
+      background: var(--bg-code);
+      border-radius: var(--radius-sm);
+      font-family: var(--mono);
+      font-size: 13px;
       line-height: 1.6;
-      font-family: "SF Mono", "Menlo", monospace;
       white-space: pre-wrap;
       word-break: break-all;
       display: none;
@@ -176,403 +323,989 @@
 
     .result.show { display: block; }
 
-    .flow-stack {
-      display: flex;
-      flex-direction: column;
-      gap: 0;
-      margin: 14px 0;
-    }
-
-    .flow-step {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      background: var(--code-bg);
-      font-size: 14px;
-      line-height: 1.4;
+    /* ===== DEMO ELEMENTS ===== */
+    .video-container {
       position: relative;
-    }
-
-    .flow-step:first-child { border-radius: 10px 10px 0 0; }
-    .flow-step:last-child { border-radius: 0 0 10px 10px; }
-    .flow-step + .flow-step { border-top: 0.5px solid var(--border); }
-
-    .flow-num {
-      font-weight: 700;
-      color: var(--accent);
-      min-width: 22px;
-      font-size: 14px;
-    }
-
-    .flow-label {
-      flex: 1;
-      color: var(--text);
-    }
-
-    .flow-arrow {
-      text-align: center;
-      color: var(--text-secondary);
-      font-size: 16px;
-      padding: 2px 0;
-    }
-
-    video {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 12px;
+      margin-top: 14px;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
       background: #000;
       display: none;
     }
 
-    canvas.meter {
-      display: none;
+    .video-container video {
       width: 100%;
-      height: 10px;
-      margin-top: 12px;
-      border-radius: 5px;
-      background: var(--border);
+      display: block;
     }
 
-    .comparison {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .comparison .side {
-      background: var(--code-bg);
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 13px;
-      line-height: 1.6;
-      font-family: "SF Mono", "Menlo", monospace;
-    }
-
-    .comparison .side-title {
-      font-weight: 700;
-      margin-bottom: 6px;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-    }
-
-    .comparison .side-title.before { color: var(--orange); }
-    .comparison .side-title.after { color: var(--green); }
-
-    .section-label {
+    .video-label {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: rgba(0,0,0,0.65);
+      color: #fff;
       font-size: 13px;
       font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      padding: 4px 10px;
+      border-radius: 6px;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .meter-bar {
+      margin-top: 12px;
+      height: 8px;
+      border-radius: 4px;
+      background: var(--border);
+      overflow: hidden;
+      display: none;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: var(--green);
+      transition: width 0.05s linear;
+      width: 0%;
+    }
+
+    .meter-label {
+      font-size: 13px;
       color: var(--text-secondary);
-      padding: 24px 4px 6px;
+      margin-top: 6px;
+      display: none;
     }
 
-    .rule-card {
-      background: var(--card);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-top: 10px;
+    /* ===== COMPARISON TABLE ===== */
+    .comp-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 12px 0;
     }
 
-    .rule-card p {
+    .comp-table th {
+      text-align: left;
+      font-weight: 600;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border);
+      font-size: 13px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    .comp-table td {
+      padding: 10px 12px;
+      border-bottom: 0.5px solid var(--border);
+      vertical-align: top;
+      line-height: 1.5;
+    }
+
+    .comp-table tr:last-child td { border-bottom: none; }
+
+    .badge {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .badge.yes { background: rgba(52,199,89,0.15); color: var(--green); }
+    .badge.no { background: rgba(255,59,48,0.15); color: var(--red); }
+    .badge.limited { background: rgba(255,149,0,0.15); color: var(--orange); }
+
+    /* ===== NAV ===== */
+    .nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(242,242,247,0.85);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      padding: 12px 0;
+      margin: 0 -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      border-bottom: 0.5px solid var(--border);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      .nav { background: rgba(0,0,0,0.85); }
+    }
+
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .nav-inner::-webkit-scrollbar { display: none; }
+
+    .nav-link {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      text-decoration: none;
+      white-space: nowrap;
+      padding: 4px 0;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s ease, border-color 0.15s ease;
+    }
+
+    .nav-link:hover, .nav-link.active {
+      color: var(--text);
+      border-bottom-color: var(--accent);
+    }
+
+    /* ===== TOGGLE GROUP ===== */
+    .toggle-group {
+      display: flex;
+      background: var(--bg-code);
+      border-radius: var(--radius-sm);
+      padding: 3px;
+      margin-bottom: 14px;
+    }
+
+    .toggle-btn {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 14px;
+      font-weight: 600;
+      font-family: inherit;
+      background: transparent;
+      border: none;
+      border-radius: 7px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background 0.15s ease, color 0.15s ease;
+    }
+
+    .toggle-btn.active {
+      background: var(--bg-elevated);
+      color: var(--text);
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    .toggle-panel { display: none; }
+    .toggle-panel.active { display: block; }
+
+    /* ===== CALLOUT ===== */
+    .callout {
+      background: var(--accent-light);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+      padding: 14px 16px;
+      margin: 14px 0;
       font-size: 15px;
       line-height: 1.55;
-      color: var(--text-secondary);
     }
 
-    .rule-card p + p { margin-top: 10px; }
-    .rule-card strong { color: var(--text); }
+    .callout.warn {
+      background: rgba(255,149,0,0.1);
+      border-left-color: var(--orange);
+    }
+
+    .callout.danger {
+      background: rgba(255,59,48,0.08);
+      border-left-color: var(--red);
+    }
+
+    .callout strong { color: var(--text); }
+
+    /* ===== HIGHLIGHT COLORS ===== */
+    .hl-blue { color: var(--accent); font-weight: 600; }
+    .hl-green { color: var(--green); font-weight: 600; }
+    .hl-red { color: var(--red); font-weight: 600; }
+    .hl-orange { color: var(--orange); font-weight: 600; }
+    .hl-purple { color: var(--purple); font-weight: 600; }
   </style>
 </head>
 <body>
 
-  <h1>Permission Explorer</h1>
-  <p class="subtitle">How camera and microphone permissions actually work — from hardware to tap, bottom to top.</p>
-
-  <!-- ====== LAYER 0: HARDWARE ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L0</span>
-      <span class="layer-title">Hardware — Physical Devices</span>
+  <!-- NAV -->
+  <nav class="nav">
+    <div class="nav-inner">
+      <a class="nav-link" href="#architecture">Architecture</a>
+      <a class="nav-link" href="#data-flow">Data Flow</a>
+      <a class="nav-link" href="#timing">Timing & Buffers</a>
+      <a class="nav-link" href="#audio-sessions">Audio Sessions</a>
+      <a class="nav-link" href="#browser-vs-native">Browser vs Native</a>
+      <a class="nav-link" href="#live-demo">Live Demo</a>
+      <a class="nav-link" href="#code">Code Examples</a>
     </div>
-    <div class="layer-body">
-      <p class="layer-desc">Your iPhone has physical camera sensors and microphones. They sit idle until an app or website requests access. iOS routes all audio/video through the hardware bus managed by the kernel.</p>
-      <div class="layer-diagram">
-<span class="hl">[Front Camera]</span> ────┐
-                        ├─→ <span class="hl">ISP (Image Signal Processor)</span> ─→ Frame buffer
-<span class="hl">[Rear Camera]</span>  ────┘
-<br>
-<span class="hl">[Microphone]</span>  ────→ <span class="hl">Audio Codec (ADC)</span> ─→ PCM samples
+  </nav>
+
+  <h1>iOS Media Architecture</h1>
+  <p class="section-intro">A guided tour through every layer of the stack — from the physical sensor on your iPhone to the JavaScript API in your browser. Click any layer to explore it in depth.</p>
+
+  <!-- ===== SECTION: ARCHITECTURE STACK ===== -->
+  <div class="section-label" id="architecture">The Stack — Low to High</div>
+
+  <div class="card">
+    <div class="arch-stack">
+
+      <!-- L0 -->
+      <div class="arch-layer" data-layer="0" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 0</div>
+        <div class="layer-name">Hardware — Sensors & Converters</div>
+        <div class="layer-desc">Physical silicon: image sensors, microphone MEMS, ADCs, ISP</div>
+        <span class="expand-icon">&#8250;</span>
       </div>
-    </div>
-  </div>
+      <div class="arch-detail" id="layer-0">
+        <h4>What's physically on the device</h4>
+        <p>Every iPhone contains physical components that convert photons and sound pressure waves into electrical signals.</p>
+        <ul>
+          <li><strong>Image sensor</strong> (CMOS): A grid of photosites. Each photosite converts incoming photons into electrons via the photoelectric effect. The resulting charge is measured and converted to a digital value (RAW pixel data).</li>
+          <li><strong>MEMS Microphone</strong>: A microscopic diaphragm that vibrates with sound pressure. Capacitance changes are measured and converted to voltage.</li>
+          <li><strong>ADC (Analog-to-Digital Converter)</strong>: Converts the microphone's continuous analog voltage into discrete digital samples. On modern iPhones this is 24-bit at up to 48 kHz (or 96 kHz for audio interface input).</li>
+          <li><strong>ISP (Image Signal Processor)</strong>: A dedicated hardware block in the A-series chip that processes RAW sensor data — demosaicing (Bayer → RGB), noise reduction, tone mapping, white balance, and HDR merging — in real time.</li>
+        </ul>
+        <div class="detail-code">Physical pipeline:
 
-  <!-- ====== LAYER 1: OS ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L1</span>
-      <span class="layer-title">iOS — OS-Level Privacy Gate</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">iOS enforces a <strong>mandatory privacy framework</strong>. No process (not even Apple apps) can access camera or mic without explicit user consent. This is enforced at the kernel level — not just a UI convention.</p>
-      <div class="layer-diagram">
-<span class="hl-green">Privacy Entitlements</span> — every app declares what it needs
-<span class="hl-green">TCC (Transparency Consent Control)</span> — iOS subsystem that tracks per-app permissions
-<span class="hl-green">Keychain-backed store</span> — your allow/deny decisions are persisted by iOS
-<br>
-<span class="hl-orange">iOS rule:</span> If user previously denied an origin, the dialog is skipped and access is hard-blocked at the OS layer.
+  Photon → CMOS photosite → Electron charge → ADC → RAW pixel
+                                                      ↓
+                                                   ISP → YUV420 / NV12 frame
+
+  Sound wave → MEMS diaphragm → Voltage → ADC → PCM samples (24-bit, 48kHz)</div>
+        <p><strong>Key insight:</strong> At this level, there is no concept of "video" or "audio" — just streams of raw numerical data produced at precise clock rates.</p>
       </div>
-    </div>
-  </div>
 
-  <!-- ====== LAYER 2: BROWSER ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L2</span>
-      <span class="layer-title">WebKit — Browser Sandboxing</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">Safari uses WebKit. Each website runs in a <strong>sandboxed process</strong>. The browser mediates between JS and the OS. The JS code cannot directly touch hardware — it asks the browser, which asks iOS, which asks the user.</p>
-      <div class="layer-diagram">
-<span class="hl">JS: navigator.mediaDevices.getUserMedia()</span>
+      <!-- L1 -->
+      <div class="arch-layer" data-layer="1" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 1</div>
+        <div class="layer-name">Kernel & IOKit — Driver Layer</div>
+        <div class="layer-desc">XNU kernel drivers, IOKit matching, hardware abstraction</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-1">
+        <h4>How iOS talks to the hardware</h4>
+        <p>iOS uses the <strong>XNU kernel</strong> (hybrid Mach + BSD). Hardware drivers are loaded as kernel extensions (kexts) managed by <strong>IOKit</strong>, Apple's object-oriented driver framework.</p>
+        <ul>
+          <li><strong>IOKit registry</strong>: A tree of driver/service objects. Each hardware component is represented as an <code>IOService</code>.</li>
+          <li><strong>Matching dictionary</strong>: When a driver is loaded, IOKit matches it to hardware by comparing vendor/device IDs in the registry.</li>
+          <li><strong>IOMemoryDescriptor</strong>: The kernel provides zero-copy memory buffers that drivers write into. User-space frameworks map these buffers directly — no copying needed.</li>
+          <li><strong>Interrupt handling</strong>: When the camera sensor finishes a frame or the ADC completes a buffer of samples, a hardware interrupt fires. The kernel driver processes it and signals waiting user-space processes via mach ports.</li>
+        </ul>
+        <div class="detail-code">Kernel-level flow:
+
+  Hardware interrupt
+    → Driver ISR (Interrupt Service Routine)
+      → IOMemoryDescriptor DMA buffer filled
+        → IOService::message() → notifies clients
+          → User-space framework receives callback
+            → Sample buffer is ready for processing</div>
+        <p><strong>Key insight:</strong> The kernel enforces the first gate of access. Without the driver being loaded and the kernel allowing the process to open the device node, nothing above this layer works.</p>
+      </div>
+
+      <!-- L2 -->
+      <div class="arch-layer" data-layer="2" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 2</div>
+        <div class="layer-name">Core Media / Core Audio — Low-Level C Frameworks</div>
+        <div class="layer-desc">CMTime, CMSampleBuffer, AudioUnit, AudioQueue — the building blocks</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-2">
+        <h4>The fundamental media abstractions</h4>
+        <p>These are C-level frameworks that provide the <strong>primitive data types</strong> and <strong>processing units</strong> that everything above builds on.</p>
+        <h4>CoreMedia</h4>
+        <ul>
+          <li><strong><code>CMTime</code></strong>: A rational-number timestamp (value/timescale). This is how iOS represents "when" a sample was captured. It avoids floating-point drift.</li>
+          <li><strong><code>CMSampleBuffer</code></strong>: The universal container for media data. Holds a block of compressed or uncompressed samples (video frames, audio buffers), their <code>CMTime</code> timestamps, format descriptions, and attachments (metadata like rotation, HDR flags).</li>
+          <li><strong><code>CMBlockBuffer</code></strong>: The actual bytes inside a <code>CMSampleBuffer</code>. Can reference kernel memory without copying.</li>
+          <li><strong><code>CMVideoFormatDescription</code></strong>: Describes video format — codec type (H.264, HEVC), dimensions, pixel format (NV12, BGRA), color space (sRGB, P3, HLG).</li>
+          <li><strong><code>CMAudioFormatDescription</code></strong>: Describes audio format — sample rate, bit depth, channel layout, codec (PCM, AAC).</li>
+        </ul>
+        <h4>CoreAudio</h4>
+        <ul>
+          <li><strong><code>AudioUnit</code></strong>: A modular audio processing node. Think "plugins" — a microphone input unit, an EQ unit, a mixer, an output unit. Chain them together to build a signal graph.</li>
+          <li><strong><code>AudioQueue</code></strong>: Higher-level API for simple recording/playback. Manages buffers internally.</li>
+          <li><strong><code>AudioSession</code></strong>: Manages how your app's audio interacts with the system (see Audio Sessions section below).</li>
+        </ul>
+        <div class="detail-code">A CMSampleBuffer contains:
+
+  ┌─────────────────────────────────┐
+  │  CMBlockBuffer  ← raw bytes     │
+  │  (YUV frame or PCM samples)     │
+  ├─────────────────────────────────┤
+  │  CMTime         ← timestamp     │
+  │  (value: 4800, scale: 600)      │
+  │  = 8.0 seconds                  │
+  ├─────────────────────────────────┤
+  │  FormatDescription ← metadata   │
+  │  (codec, dimensions, etc.)      │
+  ├─────────────────────────────────┤
+  │  Attachments     ← per-sample   │
+  │  (HDR flag, rotation, etc.)     │
+  └─────────────────────────────────┘</div>
+      </div>
+
+      <!-- L3 -->
+      <div class="arch-layer" data-layer="3" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 3</div>
+        <div class="layer-name">AVFoundation — High-Level Objective-C/Swift Framework</div>
+        <div class="layer-desc">AVCaptureSession, AVCaptureDevice, AVAudioRecorder — the app developer's API</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-3">
+        <h4>What native iOS developers use</h4>
+        <p>AVFoundation is Apple's <strong>unified media framework</strong> that wraps CoreMedia and CoreAudio into an object-oriented, easy-to-use API. This is what Swift and Objective-C developers interact with in native iOS apps.</p>
+        <h4>Core classes</h4>
+        <ul>
+          <li><strong><code>AVCaptureSession</code></strong>: The central coordinator. You configure inputs (camera, mic), outputs (video file, sample buffer), and connections between them. It manages the hardware resources and starts/stops the data flow.</li>
+          <li><strong><code>AVCaptureDevice</code></strong>: Represents a physical device (front camera, rear camera, microphone). You query its capabilities: supported resolutions, frame rates, focus modes, HDR support.</li>
+          <li><strong><code>AVCaptureDeviceInput</code></strong>: Wraps a device as an input to the session.</li>
+          <li><strong><code>AVCaptureVideoDataOutput</code></strong>: Delivers raw video frames as <code>CMSampleBuffer</code> objects to a delegate callback. This is where you process each frame in real time.</li>
+          <li><strong><code>AVCaptureAudioDataOutput</code></strong>: Same but for audio — delivers PCM sample buffers.</li>
+          <li><strong><code>AVCapturePhotoOutput</code></strong>: High-quality still photo capture with features like RAW, HDR, portrait mode.</li>
+          <li><strong><code>AVCaptureMovieFileOutput</code></strong>: Records directly to a file with codec selection.</li>
+        </ul>
+        <div class="detail-code">// Native Swift example:
+
+let session = AVCaptureSession()
+let camera = AVCaptureDevice.default(.builtInWideAngleCamera,
+  for: .video, position: .front)
+let input = try AVCaptureDeviceInput(device: camera!)
+session.addInput(input)
+
+let output = AVCaptureVideoDataOutput()
+output.setSampleBufferDelegate(self,
+  queue: DispatchQueue(label: "videoQueue"))
+session.addOutput(output)
+
+session.startRunning()
+
+// Callback fires ~30 times per second:
+func captureOutput(_ output: AVCaptureOutput,
+  didOutput sampleBuffer: CMSampleBuffer,
+  from connection: AVCaptureConnection) {
+  // Here's your CMSampleBuffer — raw frame data
+}</div>
+        <h4>What AVFoundation gives you that the browser doesn't</h4>
+        <ul>
+          <li>Manual control of focus, exposure, white balance, ISO, shutter speed</li>
+          <li>RAW photo output (ProRAW / DNG)</li>
+          <li>Direct CMSampleBuffer access — process every frame pixel-by-pixel</li>
+          <li>Multi-camera simultaneous capture (Picture-in-Picture, spatial video)</li>
+          <li>Hardware encoder configuration (bitrate, keyframe interval, profile)</li>
+          <li>Background audio recording</li>
+          <li>Custom audio processing graphs with AudioUnit</li>
+          <li>Photo capture pipeline (HDR merge, Deep Fusion, Smart HDR)</li>
+        </ul>
+      </div>
+
+      <!-- L4 -->
+      <div class="arch-layer" data-layer="4" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 4</div>
+        <div class="layer-name">TCC — Transparency, Consent & Control</div>
+        <div class="layer-desc">iOS privacy subsystem that enforces permission gates</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-4">
+        <h4>The enforcement mechanism</h4>
+        <p><strong>TCC (Transparency, Consent, and Control)</strong> is the macOS/iOS subsystem that intercepts every attempt to access protected resources. It sits between the app and the hardware driver layer.</p>
+        <ul>
+          <li><strong>Per-process database</strong>: TCC maintains a SQLite database at <code>/private/var/db/com.apple.TCC/TCC.db</code> mapping each process to its allowed/denied/limited status for each resource type (kTCCServiceCamera, kTCCServiceMicrophone, etc.).</li>
+          <li><strong>Interception point</strong>: When any process calls a camera/mic API, the system call is intercepted. TCC checks the database. If the status is "not determined," it shows the system dialog. If "denied," it returns an error. If "allowed," the call proceeds.</li>
+          <li><strong>System dialog</strong>: Rendered by SpringBoard (the iOS home screen process), NOT by the app. The app has zero control over its appearance, timing beyond the API call, or dismissal.</li>
+          <li><strong>Keychain-backed</strong>: User decisions are stored in the Keychain, which means they survive app reinstalls and system updates.</li>
+          <li><strong>Per-origin in Safari</strong>: For websites, TCC tracks by origin (scheme + host + port). <code>https://example.com</code> and <code>https://www.example.com</code> are different origins.</li>
+        </ul>
+        <div class="detail-code">TCC decision flow:
+
+  App calls AVCaptureSession.startRunning()
+    or JS calls navigator.mediaDevices.getUserMedia()
     │
     ▼
-<span class="hl">WebKit Content Process</span> (sandboxed — no direct hardware access)
+  TCC intercepts the system call
     │
     ▼
-<span class="hl">WebKit UI Process</span> (has OS entitlements, shows the system dialog)
+  Query TCC.db: "Has this process/origin been
+    granted kTCCServiceCamera?"
+    │
+    ├─ NOT DETERMINED → Show system dialog
+    │   ├─ User taps "Allow" → Write to TCC.db → Proceed
+    │   └─ User taps "Don't Allow" → Write to TCC.db → Block
+    │
+    ├─ DENIED → Return error immediately
+    │   (no dialog shown — user must go to Settings to change)
+    │
+    └─ ALLOWED → Let the call proceed to the driver</div>
+      </div>
+
+      <!-- L5 -->
+      <div class="arch-layer" data-layer="5" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 5</div>
+        <div class="layer-name">WebKit — Browser Sandbox</div>
+        <div class="layer-desc">Process isolation, content process, WebRTC stack</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-5">
+        <h4>How Safari isolates websites</h4>
+        <p>WebKit uses a <strong>multi-process architecture</strong>. Each website (or group of related sites) runs in a separate sandboxed process that has <strong>no direct access to hardware</strong>.</p>
+        <ul>
+          <li><strong>UI Process</strong>: The actual Safari app. Has full OS entitlements, manages windows, tabs, and the permission UI. Talks to the OS directly.</li>
+          <li><strong>Content Process</strong>: Runs your website's HTML, CSS, and JavaScript. Sandboxed. No filesystem access, no camera/mic access, no network access beyond what the UI Process proxies for it.</li>
+          <li><strong>Network Process</strong>: Handles all network requests on behalf of content processes. Enforces CSP, CORS, cookie policies.</li>
+          <li><strong>GPU Process</strong>: Handles WebGL, canvas, and video decoding. Communicates with the actual GPU.</li>
+        </ul>
+        <p>When JavaScript calls <code>getUserMedia()</code>, the content process sends an IPC (inter-process communication) message to the UI Process. The UI Process then talks to TCC. The entire permission flow happens across process boundaries.</p>
+        <div class="detail-code">WebKit process flow for getUserMedia:
+
+  Content Process (your JS)
+    │ navigator.mediaDevices.getUserMedia()
+    │
+    ▼ IPC message to
+  UI Process (Safari app)
+    │ Asks TCC for this origin
+    │ Shows system alert if needed
     │
     ▼
-<span class="hl">iOS TCC</span> (checks policy, grants/denies at kernel level)
+  TCC → allows or denies
+    │
+    ▼ response
+  UI Process → creates AVFoundation capture session
+    internally, gets CMSampleBuffers
+    │
+    ▼ IPC back
+  Content Process → receives MediaStream object
+    (abstracted, limited data)
+    │
+    ▼
+  Your JS gets a Promise with MediaStream</div>
+        <h4>WebRTC stack in WebKit</h4>
+        <p>Behind <code>getUserMedia()</code>, WebKit uses a <strong>WebRTC</strong> implementation that bridges to the native capture APIs. The browser creates an internal <code>AVCaptureSession</code>, captures frames, and delivers them to the content process as <code>MediaStream</code> objects.</p>
       </div>
+
+      <!-- L6 -->
+      <div class="arch-layer" data-layer="6" onclick="toggleLayer(this)">
+        <div class="layer-tag" style="color: var(--text-tertiary);">Layer 6</div>
+        <div class="layer-name">JavaScript API — getUserMedia</div>
+        <div class="layer-desc">MediaDevices, MediaStream, MediaStreamTrack — what your code sees</div>
+        <span class="expand-icon">&#8250;</span>
+      </div>
+      <div class="arch-detail" id="layer-6">
+        <h4>The highest level — what you write</h4>
+        <p>This is the W3C-standard API that web developers use. It abstracts away every layer below into a simple Promise-based interface.</p>
+        <ul>
+          <li><strong><code>navigator.mediaDevices</code></strong>: The entry point. Provides <code>getUserMedia()</code> and <code>enumerateDevices()</code>.</li>
+          <li><strong><code>MediaStream</code></strong>: A container for tracks. Has an <code>id</code> and an <code>active</code> flag. Created by <code>getUserMedia()</code> or <code>HTMLMediaElement.captureStream()</code>.</li>
+          <li><strong><code>MediaStreamTrack</code></strong>: A single audio or video source. Has <code>enabled</code> (mute), <code>readyState</code> ("live"/"ended"), and <code>getSettings()</code> (resolution, frame rate).</li>
+          <li><strong><code>MediaStreamConstraints</code></strong>: An object specifying what you want: <code>{ video: true, audio: true }</code> or more detailed: <code>{ video: { facingMode: "user", width: 1920 } }</code>.</li>
+        </ul>
+        <div class="detail-code">// The full API surface:
+
+// 1. Request permission + start capture
+const stream = await navigator.mediaDevices
+  .getUserMedia({
+    video: { facingMode: "user", width: { ideal: 1920 } },
+    audio: { echoCancellation: true }
+  });
+
+// 2. Enumerate devices (labels masked until granted)
+const devices = await navigator.mediaDevices
+  .enumerateDevices();
+
+// 3. Work with the stream
+const videoTrack = stream.getVideoTracks()[0];
+const settings = videoTrack.getSettings();
+console.log(settings.width);  // actual width granted
+console.log(settings.frameRate); // actual fps granted
+
+// 4. Render to a <video> element
+videoElement.srcObject = stream;
+
+// 5. Stop (release permission)
+stream.getTracks().forEach(t => t.stop());</div>
+        <h4>What the browser hides from you</h4>
+        <ul>
+          <li>The actual <code>CMSampleBuffer</code> objects (you get a decoded frame via <code>&lt;video&gt;</code> or <code>VideoFrame</code> API)</li>
+          <li>Codec selection, bitrate, keyframe intervals</li>
+          <li>Manual focus/exposure/white balance control</li>
+          <li>RAW sensor data</li>
+          <li>The exact device name (until permission granted)</li>
+          <li>Multi-camera simultaneous access (limited)</li>
+          <li>Background capture (blocked)</li>
+        </ul>
+      </div>
+
     </div>
   </div>
 
-  <!-- ====== LAYER 3: THE API ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L3</span>
-      <span class="layer-title">JavaScript API — The Promise</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc"><code>getUserMedia()</code> returns a <strong>Promise</strong>. It does not block. The browser shows the permission dialog asynchronously. The Promise resolves with a <code>MediaStream</code> if granted, or rejects with a <code>DOMException</code> if denied.</p>
-      <div class="code-block" id="apiCode">navigator.mediaDevices
-  .getUserMedia({ video: true, audio: true })
-  .then(stream => {
-    // ✅ Permission granted
-    // `stream` contains MediaStreamTracks
-  })
-  .catch(error => {
-    // ❌ Permission denied or error
-    // error.name tells you why:
-    //   "NotAllowedError" — user denied
-    //   "NotFoundError" — no device found
-    //   "NotReadableError" — hardware error
-  });</div>
-
-      <div class="btn-row">
-        <button class="btn" id="reqCamera">Request Camera</button>
-        <button class="btn" id="reqMic">Request Mic</button>
-      </div>
-      <div class="result" id="apiResult"></div>
-      <div class="btn-row" style="margin-top:10px;">
-        <button class="btn red" id="stopAll" style="display:none;">Stop & Release</button>
-        <button class="btn green" id="reEnumerate" style="display:none;">Re-enumerate</button>
-      </div>
-      <div class="result" id="stopResult"></div>
-    </div>
+  <div class="callout">
+    <strong>Think of it like a restaurant.</strong> Layer 0 is the farm where food is grown. Layer 1 is the delivery truck. Layer 2 is the kitchen prep station. Layer 3 is the chef's full toolkit. Layer 4 is the health inspector. Layer 5 is the locked door between kitchen and dining room. Layer 6 is the menu card you get as a customer — it only shows what you're allowed to order.
   </div>
 
-  <!-- ====== LAYER 4: BEFORE/AFTER ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L4</span>
-      <span class="layer-title">enumerateDevices() — Before vs After</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">Before permission: device labels are <strong>masked</strong>. After permission: real device names and IDs are revealed. This is the clearest proof of what the permission actually unlocks.</p>
-      <div class="comparison" id="comparison">
-        <div class="side">
-          <div class="side-title before">Before Grant</div>
-          <div id="beforeList">Tap "Request" above to compare.</div>
-        </div>
-        <div class="side">
-          <div class="side-title after">After Grant</div>
-          <div id="afterList">—</div>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ===== SECTION: DATA FLOW ===== -->
+  <div class="section-label" id="data-flow">The Complete Data Flow</div>
 
-  <!-- ====== LAYER 5: THE DIALOG ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L5</span>
-      <span class="layer-title">The Permission Dialog — Out of Your Control</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">When you call <code>getUserMedia()</code>, iOS shows a <strong>system-level alert</strong>. The website cannot style it, dismiss it, pre-select Allow, or even detect it. It's rendered by UIKit, not the browser.</p>
-      <div class="flow-stack">
+  <div class="section-label" style="padding-top:8px;">What happens when you tap "Allow" on the permission dialog</div>
+
+  <div class="card">
+    <div class="card-body">
+      <p class="body-text" style="margin-bottom:14px;">This traces a single video frame from photon to your <code>&lt;video&gt;</code> element:</p>
+      <div class="flow">
         <div class="flow-step">
           <span class="flow-num">1</span>
-          <span class="flow-label">Your site calls <code>getUserMedia()</code></span>
+          <span class="light-label">Light hits the CMOS sensor. Each photosite generates electrons proportional to photon count.</span>
         </div>
         <div class="flow-arrow">↓</div>
         <div class="flow-step">
           <span class="flow-num">2</span>
-          <span class="flow-label">WebKit asks iOS: "Does this origin have permission?"</span>
+          <span>ADC converts analog charge to digital RAW Bayer values. ISP processes to YUV or RGB.</span>
         </div>
         <div class="flow-arrow">↓</div>
         <div class="flow-step">
           <span class="flow-num">3</span>
-          <span class="flow-label">iOS shows system dialog: <strong>"Use your [camera/microphone]?"</strong></span>
+          <span>Kernel driver DMA-writes frame buffer into shared memory. Signals waiting process via mach port.</span>
         </div>
         <div class="flow-arrow">↓</div>
         <div class="flow-step">
-          <span class="flow-num">4a</span>
-          <span class="flow-label">User taps <span class="hl-green">Allow</span> → Promise resolves → stream delivered</span>
+          <span class="flow-num">4</span>
+          <span>AVFoundation wraps the buffer in a <code>CMSampleBuffer</code> with <code>CMTime</code> timestamp and format description.</span>
         </div>
-        <div class="flow-arrow" style="color:var(--text-secondary)">or</div>
+        <div class="flow-arrow">↓</div>
         <div class="flow-step">
-          <span class="flow-num">4b</span>
-          <span class="flow-label">User taps <span class="hl-red">Don't Allow</span> → Promise rejects → NotAllowedError</span>
+          <span class="flow-num">5</span>
+          <span>WebKit's UI Process captures the frame, decodes if compressed, and sends it via IPC to the content process.</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <span class="flow-num">6</span>
+          <span>Content process creates a <code>MediaStreamTrack</code>. The frame is composited into the <code>&lt;video&gt;</code> element by the rendering engine.</span>
+        </div>
+        <div class="flow-arrow">↓</div>
+        <div class="flow-step">
+          <span class="flow-num">7</span>
+          <span>Your JavaScript can read the frame via <code>canvas.drawImage(video)</code> or the <code>VideoFrame</code> API (for WebCodecs).</span>
+        </div>
+      </div>
+      <p class="body-text" style="margin-top:14px;">At 30 fps, this entire pipeline runs <strong>30 times per second</strong>, end to end. The total latency from photon to screen is typically <strong>50–150 milliseconds</strong> on modern iPhones.</p>
+    </div>
+  </div>
+
+  <!-- ===== SECTION: TIMING ===== -->
+  <div class="section-label" id="timing">Timing & Sample Buffers</div>
+
+  <div class="card">
+    <div class="card-body">
+      <h3>CMTime — The Heartbeat of Media</h3>
+      <p class="body-text">Every sample in iOS media has a timestamp, and those timestamps use <strong>CMTime</strong> — a rational number (<code>value / timescale</code>) that avoids floating-point drift.</p>
+      <div class="code-block">CMTime = value / timescale
+
+Example: timescale = 600
+  Frame 0:  value = 0     → time = 0.000s
+  Frame 1:  value = 600   → time = 1.000s
+  Frame 2:  value = 1200  → time = 2.000s
+  Frame 3:  value = 1800  → time = 3.000s
+
+Why not float? 1/30 = 0.033333... recurring
+With floats: tiny errors accumulate over hours
+With CMTime: 600/600 = exactly 1.0, always</div>
+
+      <h3 style="margin-top:18px;">Video: Frames and Frame Rates</h3>
+      <p class="body-text">Video is a sequence of <code>CMSampleBuffer</code> objects, each containing one frame. The frame rate determines how many arrive per second.</p>
+      <div class="code-block">At 30 fps on iPhone front camera (720p):
+  Frame size: 1280 × 720 × 1.5 bytes (NV12) ≈ 1.38 MB
+  Data rate: 1.38 MB × 30 ≈ 41.4 MB/s (uncompressed)
+
+With HEVC encoding:
+  Same visual quality ≈ 2–5 MB/s
+  Compression ratio: ~10:1 to 20:1
+
+The browser gives you the DECODED frames.
+The encoding/decoding happens inside WebKit.</div>
+
+      <h3 style="margin-top:18px;">Audio: Samples and Buffers</h3>
+      <p class="body-text">Audio is a continuous stream of PCM (Pulse-Code Modulation) samples. iOS typically delivers them in buffers of 1024 samples at a time.</p>
+      <div class="code-block">At 48,000 Hz (48 kHz), mono, 16-bit:
+  Sample interval: 1/48000 ≈ 0.000021s (21 μs)
+  Buffer of 1024 samples: 1024/48000 ≈ 21.3 ms
+  Bytes per buffer: 1024 × 2 = 2,048 bytes
+  Data rate: 48000 × 2 = 96,000 bytes/s (96 KB/s)
+
+The browser delivers audio as a MediaStreamTrack.
+You can analyze it with Web Audio API's AnalyserNode.</div>
+    </div>
+  </div>
+
+  <!-- ===== SECTION: AUDIO SESSIONS ===== -->
+  <div class="section-label" id="audio-sessions">Audio Sessions</div>
+
+  <div class="card">
+    <div class="card-body">
+      <h3>What is an Audio Session?</h3>
+      <p class="body-text">On iOS, an <strong>Audio Session</strong> is a system-level policy that defines how your app's audio behaves with other system audio. It controls routing (speaker vs earpiece vs Bluetooth), mixing behavior, and interruption handling.</p>
+      <div class="code-block">Native iOS audio session categories:
+
+  AVAudioSessionCategorySoloAmbient
+    → Your audio only. Stops other audio. Muted by silent switch.
+
+  AVAudioSessionCategoryPlayback
+    → Your audio only. Stops other audio. Plays through silent switch.
+
+  AVAudioSessionCategoryAmbient
+    → Mix with other audio. Muted by silent switch.
+
+  AVAudioSessionCategoryPlayAndRecord  ← Used for camera/mic
+    → Can play and record simultaneously.
+    → Mixes with other audio (optional).
+    → Default route: earpiece. Must opt-in for speaker.
+
+  AVAudioSessionCategoryRecord
+    → Record only. No playback.
+
+  AVAudioSessionCategoryMultiRoute
+    → Multiple input/output routes (USB audio + Bluetooth).</div>
+
+      <div class="callout warn">
+        <strong>Browser limitation:</strong> The browser uses <code>PlayAndRecord</code> internally for <code>getUserMedia({ audio: true })</code>. You cannot change the category from JavaScript. You cannot force speaker output vs earpiece from the browser. Native apps have full control.
+      </div>
+
+      <h3 style="margin-top:18px;">Audio Session Interruptions</h3>
+      <p class="body-text">iOS can interrupt your audio session at any time:</p>
+      <ul style="padding-left:18px; font-size:15px; color:var(--text-secondary); line-height:1.6;">
+        <li><strong>Phone call</strong> → Your app's audio is paused. Session deactivates.</li>
+        <li><strong>Alarm</strong> → Your audio may duck (lower volume) or stop.</li>
+        <li><strong>Screen locks</strong> → Background audio may continue if your category allows it.</li>
+        <li><strong>Another app takes focus</strong> → Your audio is backgrounded.</li>
+      </ul>
+      <p class="body-text">In the browser, these interruptions are largely <strong>invisible</strong> to your JavaScript. The MediaStreamTrack may go silent, the <code>&lt;video&gt;</code> element may pause, but there's no explicit API to detect "audio session interrupted." Native apps receive <code>AVAudioSessionInterruptionNotification</code>.</p>
+    </div>
+  </div>
+
+  <!-- ===== SECTION: BROWSER VS NATIVE ===== -->
+  <div class="section-label" id="browser-vs-native">Browser vs Native iOS</div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="switchTab('native')">Native App</button>
+        <button class="toggle-btn" onclick="switchTab('browser')">Browser (Safari)</button>
+      </div>
+
+      <div class="toggle-panel active" id="panel-native">
+        <h3>What a Native iOS App Can Do</h3>
+        <p class="body-text" style="margin-bottom:14px;">Full access to AVFoundation, CoreMedia, and CoreAudio with direct hardware control.</p>
+        <table class="comp-table">
+          <tr><th>Capability</th><th>Native</th></tr>
+          <tr><td>Manual focus / exposure / white balance</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>RAW photo capture (ProRAW, DNG)</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Multi-camera simultaneous capture</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Direct CMSampleBuffer access</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Custom codec settings (bitrate, profile)</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Background audio recording</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Speaker/earpiece/Bluetooth routing</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Custom audio processing graph (AudioUnit)</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Photo pipeline (Deep Fusion, Smart HDR)</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Metal GPU processing on camera frames</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Vision / CoreML on live camera feed</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Face detection & tracking (native)</td><td><span class="badge yes">Full</span></td></tr>
+          <tr><td>Screen recording</td><td><span class="badge limited">Limited</span></td></tr>
+          <tr><td>System-wide audio capture</td><td><span class="badge no">No</span></td></tr>
+        </table>
+      </div>
+
+      <div class="toggle-panel" id="panel-browser">
+        <h3>What Safari (Browser) Can Do</h3>
+        <p class="body-text" style="margin-bottom:14px;">Limited to the W3C Media Capture API. WebKit handles all the AVFoundation internally.</p>
+        <table class="comp-table">
+          <tr><th>Capability</th><th>Browser</th></tr>
+          <tr><td>Basic camera + microphone access</td><td><span class="badge yes">Yes</span></td></tr>
+          <tr><td>Live video preview via &lt;video&gt;</td><td><span class="badge yes">Yes</span></td></tr>
+          <tr><td>Audio analysis (Web Audio API)</td><td><span class="badge yes">Yes</span></td></tr>
+          <tr><td>Frame capture via canvas</td><td><span class="badge yes">Yes</span></td></tr>
+          <tr><td>facingMode: "user" / "environment"</td><td><span class="badge yes">Yes</span></td></tr>
+          <tr><td>Resolution constraints (ideal, exact)</td><td><span class="badge limited">Partial</span></td></tr>
+          <tr><td>frameRate constraints</td><td><span class="badge limited">Partial</span></td></tr>
+          <tr><td>Manual focus / exposure / white balance</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>RAW photo capture</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Multi-camera simultaneous</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Direct CMSampleBuffer access</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Custom codec settings</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Background recording</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Speaker/earpiece routing</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Custom audio processing graph</td><td><span class="badge limited">Web Audio only</span></td></tr>
+          <tr><td>Metal GPU processing</td><td><span class="badge limited">WebGPU (partial)</span></td></tr>
+          <tr><td>CoreML on camera feed</td><td><span class="badge no">No</span></td></tr>
+          <tr><td>Screen recording</td><td><span class="badge no">No</span></td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout">
+    <strong>The gap is large.</strong> A browser can access your camera and mic, but it cannot control <em>how</em> they operate. It cannot adjust focus, capture RAW data, process frames on the GPU with Metal, or run ML models on the Neural Engine directly. The browser gets a decoded video feed — nothing more.
+  </div>
+
+  <!-- ===== SECTION: CODE EXPLORER ===== -->
+  <div class="section-label" id="code">Code Examples — See the Difference</div>
+
+  <div class="card">
+    <div class="card-body" style="padding:0;">
+      <div class="toggle-group">
+        <button class="toggle-btn active" onclick="switchCode('native')">Native Swift</button>
+        <button class="toggle-btn" onclick="switchCode('browser')">Browser JS</button>
+      </div>
+
+      <div class="toggle-panel active" id="code-native">
+        <div class="card-body">
+          <h3>Native Swift — Full Control</h3>
+          <div class="code-block">// 1. Create a capture session
+let session = AVCaptureSession()
+session.sessionPreset = .high
+
+// 2. Find and configure the camera
+let device = AVCaptureDevice.default(
+  .builtInWideAngleCamera, for: .video, position: .front
+)!
+try device.lockForConfiguration()
+device.activeFormat = device.formats
+  .first { $0.supportedFrameRates.contains(60) }!
+device.focusMode = .autoFocus
+device.exposureMode = .continuousAutoExposure
+device.whiteBalanceMode = .continuousAutoWhiteBalance
+device.unlockForConfiguration()
+
+// 3. Create input
+let input = try AVCaptureDeviceInput(device: device)
+session.addInput(input)
+
+// 4. Create output for raw frames
+let videoOutput = AVCaptureVideoDataOutput()
+videoOutput.videoSettings = [
+  kCVPixelBufferPixelFormatTypeKey as String:
+  kCVPixelFormatType_32BGRA
+]
+videoOutput.setSampleBufferDelegate(self,
+  queue: DispatchQueue(label: "frameQueue"))
+session.addOutput(videoOutput)
+
+// 5. Start
+session.startRunning()
+
+// 6. Receive every frame as CMSampleBuffer
+func captureOutput(_ output: AVCaptureOutput,
+  didOutput sampleBuffer: CMSampleBuffer,
+  from connection: AVCaptureConnection) {
+
+  guard let pixelBuffer = CMSampleBufferGetImageBuffer(
+    sampleBuffer) else { return }
+
+  // Access raw pixel data directly
+  CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly)
+  let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer)
+  let width = CVPixelBufferGetWidth(pixelBuffer)
+  let height = CVPixelBufferGetHeight(pixelBuffer)
+
+  // Process with Metal, CoreImage, or CoreML here
+  // ...
+
+  CVPixelBufferUnlockBaseAddress(pixelBuffer, .readOnly)
+}</div>
+        </div>
+      </div>
+
+      <div class="toggle-panel" id="code-browser">
+        <div class="card-body">
+          <h3>Browser JavaScript — Abstracted</h3>
+          <div class="code-block">// 1. Request camera (handles permission internally)
+const stream = await navigator.mediaDevices
+  .getUserMedia({
+    video: {
+      facingMode: "user",
+      width: { ideal: 1920 },
+      frameRate: { ideal: 30 }
+    },
+    audio: true
+  });
+
+// 2. Show preview
+const video = document.getElementById("preview");
+video.srcObject = stream;
+await video.play();
+
+// 3. Capture a single frame to canvas
+const canvas = document.createElement("canvas");
+canvas.width = video.videoWidth;
+canvas.height = video.videoHeight;
+const ctx = canvas.getContext("2d");
+ctx.drawImage(video, 0, 0);
+const dataURL = canvas.toDataURL("image/png");
+
+// 4. Analyze audio
+const audioCtx = new AudioContext();
+const source = audioCtx.createMediaStreamSource(stream);
+const analyser = audioCtx.createAnalyser();
+analyser.fftSize = 2048;
+source.connect(analyser);
+const data = new Uint8Array(analyser.frequencyBinCount);
+
+function analyze() {
+  analyser.getByteFrequencyData(data);
+  // data[] has frequency levels 0-255
+  requestAnimationFrame(analyze);
+}
+analyze();
+
+// 5. Stop
+stream.getTracks().forEach(t => t.stop());
+
+// That's it. No access to:
+// - Focus, exposure, white balance
+// - RAW sensor data
+// - CMSampleBuffer or CVPixelBuffer
+// - Codec configuration
+// - Metal / CoreML integration</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- ====== LAYER 6: THE STREAM ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L6</span>
-      <span class="layer-title">MediaStream — What You Actually Get</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">The resolved Promise gives you a <code>MediaStream</code>. It contains one or more <code>MediaStreamTrack</code> objects. Each track is a live feed of audio or video data that you can render, analyze, mute, or stop.</p>
-      <div class="code-block">stream                  → MediaStream
-  ├── stream.getVideoTracks() → [MediaStreamTrack]
-  │   ├── track.label        → "Front Camera"
-  │   ├── track.enabled      → true/false (can mute)
-  │   ├── track.readyState   → "live" or "ended"
-  │   └── track.getSettings() → { width, height, frameRate }
-  └── stream.getAudioTracks() → [MediaStreamTrack]
-      ├── track.label        → "iPhone Microphone"
-      └── track.getSettings() → { sampleRate, channelCount }
-<br>
-<span class="hl-orange">To revoke:</span> call <span class="hl">track.stop()</span> on every track.
-The permission is session-scoped. All tracks stopped = permission released.</div>
+  <!-- ===== SECTION: LIVE DEMO ===== -->
+  <div class="section-label" id="live-demo">Live Demo — Camera & Microphone</div>
 
-      <video id="camPreview" autoplay playsinline muted></video>
-      <canvas class="meter" id="micMeter"></canvas>
-    </div>
-  </div>
+  <div class="card">
+    <div class="card-body">
+      <h3>Test the Browser Media API</h3>
+      <p class="body-text" style="margin-bottom:14px;">This uses the exact <code>getUserMedia()</code> API described above. The camera preview and audio meter are rendered entirely in the browser.</p>
 
-  <!-- ====== LAYER 7: LIFECYCLE ====== -->
-  <div class="layer">
-    <div class="layer-header">
-      <span class="layer-badge">L7</span>
-      <span class="layer-title">Lifecycle — Grant, Use, Revoke</span>
-    </div>
-    <div class="layer-body">
-      <p class="layer-desc">Permissions on iOS Safari are <strong>ephemeral</strong>. They live only for the tab session. Close the tab = gone. But iOS also remembers your last decision per-origin and may skip the dialog next visit.</p>
-      <div class="layer-diagram">
-<span class="hl-green">PERMANENT (OS-level)</span>
-  └ User's Allow/Deny decision → stored by iOS TCC
-    → next visit, iOS may skip the dialog entirely
-<br>
-<span class="hl-orange">SESSION (tab-level)</span>
-  └ Active MediaStream tracks → live data flowing
-    → tab close = all tracks killed = stream dies
-    → track.stop() = individual release
-<br>
-<span class="hl-red">REVOKE</span>
-  └ User can revoke: Settings → Safari → Camera/Microphone
-  └ Site cannot detect past grants without trying again
-  └ site.clearAppCache() does NOT clear permissions
+      <div class="btn-row">
+        <button class="btn" id="startCam">Start Camera</button>
+        <button class="btn" id="startMic">Start Mic</button>
       </div>
+      <div class="btn-row">
+        <button class="btn red" id="stopAll" style="display:none;">Stop All</button>
+      </div>
+
+      <div class="result" id="demoResult"></div>
+
+      <div class="video-container" id="videoContainer">
+        <video id="videoPreview" autoplay playsinline muted></video>
+        <div class="video-label" id="videoLabel">—</div>
+      </div>
+
+      <div class="meter-bar" id="meterBar">
+        <div class="meter-fill" id="meterFill"></div>
+      </div>
+      <div class="meter-label" id="meterLabel">—</div>
+
+      <div class="result" id="settingsResult" style="margin-top:16px;"></div>
     </div>
   </div>
 
-  <!-- ====== RULES ====== -->
-  <div class="section-label">Key Rules on iOS Safari</div>
-
-  <div class="rule-card">
-    <p><strong>Permissions are per-origin.</strong> <code>https://foo.github.io</code> and <code>https://bar.github.io</code> are separate. But <code>http://</code> and <code>https://</code> are also separate (HTTP sites get no camera/mic at all on iOS).</p>
-    <p><strong>Must be user-initiated.</strong> On some browsers, <code>getUserMedia()</code> must be called from a user gesture (click/tap). iOS Safari is more lenient but it's best practice.</p>
-    <p><strong>You cannot style the dialog.</strong> It's a UIKit UIAlertController. No CSS, no JS, no customization possible.</p>
-    <p><strong>You cannot detect the dialog.</strong> There is no event, no API, no timing trick. Your Promise just waits.</p>
-    <p><strong>Stopped tracks = permission released.</strong> The OS-level grant may persist for the origin, but the active session ends. Labels go back to masked if you re-enumerate after stopping.</p>
-    <p><strong>HTTPS required.</strong> <code>getUserMedia()</code> is blocked on insecure origins. GitHub Pages provides HTTPS automatically.</p>
+  <div class="card">
+    <div class="card-body">
+      <h3>Device Enumeration</h3>
+      <p class="body-text" style="margin-bottom:14px;">See what the browser knows about your devices before and after granting permission.</p>
+      <button class="btn" id="enumBtn">Enumerate Devices</button>
+      <div class="result" id="enumResult"></div>
+    </div>
   </div>
 
   <script>
+    // ===== ARCH LAYER TOGGLE =====
+    function toggleLayer(el) {
+      var num = el.getAttribute('data-layer');
+      var detail = document.getElementById('layer-' + num);
+      var wasActive = el.classList.contains('active');
+
+      // Close all
+      document.querySelectorAll('.arch-layer').forEach(function(l) { l.classList.remove('active'); });
+      document.querySelectorAll('.arch-detail').forEach(function(d) { d.classList.remove('show'); });
+
+      if (!wasActive) {
+        el.classList.add('active');
+        detail.classList.add('show');
+      }
+    }
+
+    // ===== TAB TOGGLES =====
+    function switchTab(tab) {
+      document.querySelectorAll('.toggle-group:first-of-type .toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+      document.querySelectorAll('.toggle-panel').forEach(function(p) { p.classList.remove('active'); });
+
+      if (tab === 'native') {
+        document.getElementById('panel-native').classList.add('active');
+        event.target.classList.add('active');
+      } else {
+        document.getElementById('panel-browser').classList.add('active');
+        event.target.classList.add('active');
+      }
+    }
+
+    function switchCode(tab) {
+      var group = event.target.parentElement;
+      group.querySelectorAll('.toggle-btn').forEach(function(b) { b.classList.remove('active'); });
+      event.target.classList.add('active');
+
+      if (tab === 'native') {
+        document.getElementById('code-native').classList.add('active');
+        document.getElementById('code-browser').classList.remove('active');
+      } else {
+        document.getElementById('code-native').classList.remove('active');
+        document.getElementById('code-browser').classList.add('active');
+      }
+    }
+
+    // ===== LIVE DEMO =====
     var activeStreams = [];
+    var micAnimFrame = null;
 
-    // ====== LAYER 3: Request Camera & Mic ======
-
-    document.getElementById('reqCamera').addEventListener('click', function() {
-      var result = document.getElementById('apiResult');
+    document.getElementById('startCam').addEventListener('click', function() {
       var btn = this;
+      var result = document.getElementById('demoResult');
+      var settingsResult = document.getElementById('settingsResult');
       btn.disabled = true;
       btn.textContent = 'Requesting...';
       result.classList.add('show');
       result.textContent = 'Calling getUserMedia({ video: true })...';
 
-      navigator.mediaDevices.getUserMedia({ video: true }).then(function(stream) {
+      navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 1920 }, height: { ideal: 1080 }, frameRate: { ideal: 30 } },
+      }).then(function(stream) {
         activeStreams.push(stream);
-        result.textContent =
-          '✅ Promise RESOLVED\n\n' +
-          'Type: ' + stream.constructor.name + '\n' +
-          'ID: ' + stream.id + '\n' +
-          'Active: ' + stream.active + '\n' +
-          'Tracks: ' + stream.getTracks().length + '\n\n' +
-          'Track details:\n' +
-          stream.getTracks().map(function(t, i) {
-            var s = t.getSettings();
-            return '  Track ' + (i+1) + ': ' + t.kind + '\n' +
-                   '    label: "' + t.label + '"\n' +
-                   '    id: "' + t.id + '"\n' +
-                   '    enabled: ' + t.enabled + '\n' +
-                   '    readyState: ' + t.readyState + '\n' +
-                   '    width: ' + (s.width || '—') + '\n' +
-                   '    height: ' + (s.height || '—') + '\n' +
-                   '    frameRate: ' + (s.frameRate || '—') + '\n' +
-                   '    facingMode: ' + (s.facingMode || '—');
-          }).join('\n\n');
+        var track = stream.getVideoTracks()[0];
+        var settings = track.getSettings();
 
-        // Show preview
-        var video = document.getElementById('camPreview');
-        video.style.display = 'block';
+        result.textContent = '✅ Camera granted\nStream ID: ' + stream.id + '\nActive: ' + stream.active;
+
+        settingsResult.classList.add('show');
+        settingsResult.textContent =
+          'Track: "' + track.label + '"\n' +
+          'Kind: ' + track.kind + '\n' +
+          'ID: ' + track.id + '\n' +
+          'Enabled: ' + track.enabled + '\n' +
+          'ReadyState: ' + track.readyState + '\n\n' +
+          'Settings (actual granted values):\n' +
+          '  Width: ' + (settings.width || '—') + '\n' +
+          '  Height: ' + (settings.height || '—') + '\n' +
+          '  Frame Rate: ' + (settings.frameRate || '—') + '\n' +
+          '  Facing Mode: ' + (settings.facingMode || '—') + '\n' +
+          '  Device ID: ' + (settings.deviceId || '—');
+
+        var container = document.getElementById('videoContainer');
+        var video = document.getElementById('videoPreview');
+        container.style.display = 'block';
         video.srcObject = stream;
+        document.getElementById('videoLabel').textContent = settings.width + 'x' + settings.height + ' @ ' + (settings.frameRate || '?') + 'fps';
 
         document.getElementById('stopAll').style.display = 'block';
-        document.getElementById('reEnumerate').style.display = 'block';
-
         btn.textContent = 'Granted';
-
-        // Update before/after
-        updateBeforeAfter();
       }).catch(function(err) {
-        result.textContent =
-          '❌ Promise REJECTED\n\n' +
-          'Error name: ' + err.name + '\n' +
-          'Error message: ' + err.message + '\n\n' +
-          'What this means:\n' +
-          (err.name === 'NotAllowedError' ? 'User denied permission, or iOS has this origin blocked.' :
-           err.name === 'NotFoundError' ? 'No camera found on this device.' :
-           err.name === 'NotReadableError' ? 'Camera is in use by another app.' :
-           'Unknown error.');
-        btn.textContent = 'Request Camera';
+        result.textContent = '❌ ' + err.name + ': ' + err.message;
+        btn.textContent = 'Start Camera';
         btn.disabled = false;
       });
     });
 
-    document.getElementById('reqMic').addEventListener('click', function() {
-      var result = document.getElementById('apiResult');
+    document.getElementById('startMic').addEventListener('click', function() {
       var btn = this;
+      var result = document.getElementById('demoResult');
       btn.disabled = true;
       btn.textContent = 'Requesting...';
       result.classList.add('show');
@@ -581,138 +1314,114 @@ The permission is session-scoped. All tracks stopped = permission released.</div
       navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
         activeStreams.push(stream);
         var track = stream.getAudioTracks()[0];
-        var s = track.getSettings();
-        result.textContent =
-          '✅ Promise RESOLVED\n\n' +
-          'Track: ' + track.kind + '\n' +
-          'label: "' + track.label + '"\n' +
-          'id: "' + track.id + '"\n' +
-          'enabled: ' + track.enabled + '\n' +
-          'readyState: ' + track.readyState + '\n\n' +
-          'Settings:\n' +
-          '  sampleRate: ' + (s.sampleRate || '—') + ' Hz\n' +
-          '  channelCount: ' + (s.channelCount || '—') + '\n' +
-          '  echoCancellation: ' + (s.echoCancellation || '—');
+        var settings = track.getSettings();
 
-        // Live meter
-        startMicMeter(stream);
+        result.textContent = '✅ Microphone granted\nStream ID: ' + stream.id + '\nTrack: "' + track.label + '"';
+
+        // Start meter
+        var meterBar = document.getElementById('meterBar');
+        var meterFill = document.getElementById('meterFill');
+        var meterLabel = document.getElementById('meterLabel');
+        meterBar.style.display = 'block';
+        meterLabel.style.display = 'block';
+
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioCtx.createMediaStreamSource(stream);
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+        var buf = new Uint8Array(analyser.frequencyBinCount);
+
+        function draw() {
+          analyser.getByteFrequencyData(buf);
+          var avg = buf.reduce(function(a, b) { return a + b; }, 0) / buf.length;
+          var level = avg / 255;
+          meterFill.style.width = (level * 100) + '%';
+          meterFill.style.background = level > 0.5 ? '#ff3b30' : level > 0.2 ? '#ff9500' : '#34c759';
+          meterLabel.textContent = 'Level: ' + (level * 100).toFixed(0) + '%  |  Sample Rate: ' + (settings.sampleRate || '—') + ' Hz  |  Channels: ' + (settings.channelCount || '—');
+          micAnimFrame = requestAnimationFrame(draw);
+        }
+        draw();
 
         document.getElementById('stopAll').style.display = 'block';
-        document.getElementById('reEnumerate').style.display = 'block';
-
         btn.textContent = 'Granted';
-
-        updateBeforeAfter();
       }).catch(function(err) {
-        result.textContent =
-          '❌ Promise REJECTED\n\n' +
-          'Error name: ' + err.name + '\n' +
-          'Error message: ' + err.message;
-        btn.textContent = 'Request Mic';
+        result.textContent = '❌ ' + err.name + ': ' + err.message;
+        btn.textContent = 'Start Mic';
         btn.disabled = false;
       });
     });
 
-    // ====== Stop All ======
-
     document.getElementById('stopAll').addEventListener('click', function() {
-      var result = document.getElementById('stopResult');
-      result.classList.add('show');
-
       activeStreams.forEach(function(stream) {
-        stream.getTracks().forEach(function(track) {
-          track.stop();
-        });
+        stream.getTracks().forEach(function(track) { track.stop(); });
       });
 
-      // Clear video
-      document.getElementById('camPreview').style.display = 'none';
-      document.getElementById('camPreview').srcObject = null;
-      document.getElementById('micMeter').style.display = 'none';
+      document.getElementById('videoContainer').style.display = 'none';
+      document.getElementById('videoPreview').srcObject = null;
+      document.getElementById('meterBar').style.display = 'none';
+      document.getElementById('meterLabel').style.display = 'none';
 
-      result.textContent =
-        'All ' + activeStreams.length + ' stream(s) stopped.\n' +
-        'All tracks called .stop() → readyState = "ended"\n' +
-        'Permission released at session level.\n' +
-        'Labels will revert to masked on re-enumeration.';
+      if (micAnimFrame) cancelAnimationFrame(micAnimFrame);
+
+      var result = document.getElementById('demoResult');
+      result.classList.add('show');
+      result.textContent = 'All streams stopped. All tracks .stop() called. Permission released.';
 
       activeStreams = [];
-      document.getElementById('reqCamera').textContent = 'Request Camera';
-      document.getElementById('reqCamera').disabled = false;
-      document.getElementById('reqMic').textContent = 'Request Mic';
-      document.getElementById('reqMic').disabled = false;
+      document.getElementById('startCam').textContent = 'Start Camera';
+      document.getElementById('startCam').disabled = false;
+      document.getElementById('startMic').textContent = 'Start Mic';
+      document.getElementById('startMic').disabled = false;
       this.style.display = 'none';
     });
 
-    // ====== enumerateDevices ======
-
-    function getDeviceSummary(devices) {
-      return devices.map(function(d) {
-        return d.kind + '\n  deviceId: "' + d.deviceId + '"\n  groupId:  "' + d.groupId + '"\n  label:    "' + d.label + '"';
-      }).join('\n\n');
-    }
-
-    // Run once on load (before permission)
-    var beforeDevices = '';
-    navigator.mediaDevices.enumerateDevices().then(function(devices) {
-      beforeDevices = getDeviceSummary(devices);
-      document.getElementById('beforeList').textContent =
-        devices.length + ' device(s) found:\n\n' + beforeDevices;
-    });
-
-    function updateBeforeAfter() {
-      navigator.mediaDevices.enumerateDevices().then(function(devices) {
-        var afterSummary = getDeviceSummary(devices);
-        document.getElementById('afterList').textContent =
-          devices.length + ' device(s) found:\n\n' + afterSummary;
-
-        // Update before list if we haven't captured it yet
-        if (!document.getElementById('beforeList').textContent.includes('label:')) {
-          // Already has before data, leave it
-        }
-      });
-    }
-
-    document.getElementById('reEnumerate').addEventListener('click', function() {
-      var result = document.getElementById('stopResult');
+    // ===== ENUMERATE =====
+    document.getElementById('enumBtn').addEventListener('click', function() {
+      var result = document.getElementById('enumResult');
       result.classList.add('show');
+      result.textContent = 'Loading...';
+
       navigator.mediaDevices.enumerateDevices().then(function(devices) {
-        result.textContent = 'Re-enumerated:\n\n' + getDeviceSummary(devices);
+        var text = devices.length + ' device(s) found:\n\n';
+        devices.forEach(function(d, i) {
+          var kind = d.kind === 'videoinput' ? 'Camera' : d.kind === 'audioinput' ? 'Microphone' : d.kind === 'audiooutput' ? 'Speaker' : d.kind;
+          var label = d.label || '(masked — no permission)';
+          text += (i+1) + '. ' + kind + '\n' +
+                  '   deviceId: ' + (d.deviceId || 'empty') + '\n' +
+                  '   label: ' + label + '\n\n';
+        });
+
+        var hasRealLabels = devices.some(function(d) { return d.label && d.label.length > 0; });
+        text += (hasRealLabels ? '✅ Real device names visible — permission has been granted for this origin.' : '⚠ All labels are masked. Grant camera or mic permission to see real device names.') +
+          '\n\nThis demonstrates the "before vs after" effect of enumerateDevices().';
+
+        result.textContent = text;
       });
     });
 
-    // ====== Mic Meter ======
-
-    var micAnimFrame = null;
-    function startMicMeter(stream) {
-      var canvas = document.getElementById('micMeter');
-      canvas.style.display = 'block';
-      canvas.width = canvas.offsetWidth * 2;
-      canvas.height = 20;
-      var ctx = canvas.getContext('2d');
-
-      var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      var source = audioCtx.createMediaStreamSource(stream);
-      var analyser = audioCtx.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
-
-      var buf = new Uint8Array(analyser.frequencyBinCount);
-
-      function draw() {
-        if (!activeStreams.length) return;
-        analyser.getByteFrequencyData(buf);
-        var avg = buf.reduce(function(a, b) { return a + b; }, 0) / buf.length;
-        var level = avg / 255;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = level > 0.5 ? '#ff3b30' : level > 0.2 ? '#ff9500' : '#34c759';
-        ctx.beginPath();
-        ctx.roundRect(0, 0, canvas.width * Math.max(level, 0.02), canvas.height, 5);
-        ctx.fill();
-        micAnimFrame = requestAnimationFrame(draw);
+    // ===== NAV HIGHLIGHT =====
+    var navLinks = document.querySelectorAll('.nav-link');
+    var sections = [];
+    navLinks.forEach(function(link) {
+      var href = link.getAttribute('href');
+      if (href && href.startsWith('#')) {
+        var target = document.getElementById(href.substring(1));
+        if (target) sections.push({ link: link, el: target });
       }
-      draw();
+    });
+
+    function updateNav() {
+      var scrollY = window.scrollY + 100;
+      var current = sections[0];
+      sections.forEach(function(s) {
+        if (s.el.offsetTop <= scrollY) current = s;
+      });
+      navLinks.forEach(function(l) { l.classList.remove('active'); });
+      if (current) current.link.classList.add('active');
     }
+
+    window.addEventListener('scroll', updateNav, { passive: true });
   </script>
 </body>
 </html>
