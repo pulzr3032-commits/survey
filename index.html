@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <title>Device Info</title>
+  <title>Device API Explorer</title>
   <style>
     :root {
       --bg: #f2f2f7;
@@ -15,7 +15,9 @@
       --accent: #0071e3;
       --accent-active: #005bb5;
       --border: #e5e5ea;
-      --success: #34c759;
+      --green: #34c759;
+      --red: #ff3b30;
+      --orange: #ff9500;
       --radius: 14px;
       --safe-top: env(safe-area-inset-top, 0px);
       --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -33,31 +35,27 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
-    html {
-      overscroll-behavior: none;
-      -webkit-overflow-scrolling: touch;
-    }
+    html { overscroll-behavior: none; -webkit-overflow-scrolling: touch; }
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
       background: var(--bg);
       color: var(--text);
       -webkit-font-smoothing: antialiased;
-      padding: calc(var(--safe-top) + 20px) 16px calc(var(--safe-bottom) + 40px);
-      min-height: 100dvh;
+      padding: calc(var(--safe-top) + 16px) 14px calc(var(--safe-bottom) + 60px);
     }
 
     h1 {
-      font-size: 28px;
+      font-size: 30px;
       font-weight: 700;
       letter-spacing: -0.02em;
-      padding: 20px 4px 8px;
+      padding: 20px 4px 4px;
     }
 
     .subtitle {
       font-size: 15px;
       color: var(--text-secondary);
-      padding: 0 4px 24px;
+      padding: 0 4px 28px;
     }
 
     .section-title {
@@ -66,13 +64,14 @@
       text-transform: uppercase;
       letter-spacing: 0.06em;
       color: var(--text-secondary);
-      padding: 24px 4px 8px;
+      padding: 28px 4px 8px;
     }
 
     .card {
       background: var(--card);
       border-radius: var(--radius);
       overflow: hidden;
+      margin-bottom: 8px;
     }
 
     .row {
@@ -80,11 +79,10 @@
       justify-content: space-between;
       align-items: center;
       padding: 13px 16px;
+      min-height: 48px;
     }
 
-    .row + .row {
-      border-top: 0.5px solid var(--border);
-    }
+    .row + .row { border-top: 0.5px solid var(--border); }
 
     .row .label {
       font-size: 17px;
@@ -92,62 +90,637 @@
     }
 
     .row .value {
-      font-size: 17px;
+      font-size: 15px;
       color: var(--text-secondary);
       text-align: right;
       max-width: 60%;
       word-break: break-word;
+      font-variant-numeric: tabular-nums;
     }
 
-    .row .value.green {
-      color: var(--success);
+    .row .value.ok { color: var(--green); }
+    .row .value.no { color: var(--red); }
+    .row .value.warn { color: var(--orange); }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    .dot.ok { background: var(--green); }
+    .dot.no { background: var(--red); }
+    .dot.warn { background: var(--orange); }
+
+    .btn {
+      display: block;
+      width: calc(100% - 32px);
+      margin: 16px;
+      padding: 13px;
+      font-size: 17px;
+      font-weight: 600;
+      font-family: inherit;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      -webkit-appearance: none;
+      touch-action: manipulation;
+      transition: background 0.15s ease, transform 0.1s ease;
+    }
+
+    .btn:active { background: var(--accent-active); transform: scale(0.98); }
+    .btn:disabled { opacity: 0.35; pointer-events: none; }
+
+    .live-row .value { color: var(--accent); }
+
+    video.camera-preview {
+      width: 100%;
+      border-radius: 10px;
+      margin: 0 16px 16px;
+      display: none;
+      background: #000;
+    }
+
+    canvas.meter {
+      display: none;
+      width: calc(100% - 32px);
+      height: 8px;
+      margin: 0 16px 16px;
+      border-radius: 4px;
+      background: var(--border);
+    }
+
+    .detail-block {
+      padding: 12px 16px;
+      border-top: 0.5px solid var(--border);
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .detail-block .mono {
+      font-family: "SF Mono", "Menlo", monospace;
+      font-size: 12px;
+      word-break: break-all;
     }
   </style>
 </head>
 <body>
 
-  <h1>Device Info</h1>
-  <p class="subtitle">What your browser reveals on first visit.</p>
+  <h1>API Explorer</h1>
+  <p class="subtitle">What iOS Safari reveals about your device.</p>
 
-  <div class="section-title">Device</div>
+  <!-- ===== PHASE 1: AUTO-DETECTED ===== -->
+  <div class="section-title">Auto-Detected</div>
+
+  <div class="section-title" style="padding-top:8px;">Identity</div>
   <div class="card">
     <div class="row"><span class="label">Platform</span><span class="value" id="platform"></span></div>
-    <div class="row"><span class="label">User Agent</span><span class="value" id="ua"></span></div>
     <div class="row"><span class="label">Language</span><span class="value" id="lang"></span></div>
     <div class="row"><span class="label">CPU Cores</span><span class="value" id="cores"></span></div>
     <div class="row"><span class="label">Memory (GB)</span><span class="value" id="mem"></span></div>
-    <div class="row"><span class="label">Touch Support</span><span class="value" id="touch"></span></div>
+    <div class="row"><span class="label">Touch</span><span class="value" id="touch"></span></div>
   </div>
 
   <div class="section-title">Screen</div>
   <div class="card">
-    <div class="row"><span class="label">Width</span><span class="value" id="width"></span></div>
-    <div class="row"><span class="label">Height</span><span class="value" id="height"></span></div>
+    <div class="row"><span class="label">Resolution</span><span class="value" id="res"></span></div>
     <div class="row"><span class="label">Pixel Ratio</span><span class="value" id="dpr"></span></div>
     <div class="row"><span class="label">Color Depth</span><span class="value" id="color"></span></div>
-    <div class="row"><span class="label">Dark Mode</span><span class="value green" id="dark"></span></div>
+    <div class="row"><span class="label">Dark Mode</span><span class="value ok" id="dark"></span></div>
   </div>
 
   <div class="section-title">Network</div>
   <div class="card">
-    <div class="row"><span class="label">Status</span><span class="value green" id="online"></span></div>
+    <div class="row"><span class="label">Status</span><span class="value ok" id="online"></span></div>
+    <div class="row"><span class="label">Type</span><span class="value" id="netType"></span></div>
+    <div class="row"><span class="label">Downlink</span><span class="value" id="downlink"></span></div>
+  </div>
+
+  <div class="section-title">GPU</div>
+  <div class="card">
+    <div class="row"><span class="label">Renderer</span><span class="value" id="gpu"></span></div>
+    <div class="row"><span class="label">Vendor</span><span class="value" id="gpuVendor"></span></div>
+  </div>
+
+  <div class="section-title">Audio</div>
+  <div class="card">
+    <div class="row"><span class="label">AudioContext</span><span class="value" id="audioCtx"></span></div>
+    <div class="row"><span class="label">Sample Rate</span><span class="value" id="sampleRate"></span></div>
+    <div class="row"><span class="label">Channels</span><span class="value" id="channels"></span></div>
+    <div class="row"><span class="label">Voices</span><span class="value" id="voices"></span></div>
+  </div>
+
+  <div class="section-title">Storage</div>
+  <div class="card">
+    <div class="row"><span class="label">localStorage</span><span class="value" id="ls"></span></div>
+    <div class="row"><span class="label">IndexedDB</span><span class="value" id="idb"></span></div>
+    <div class="row"><span class="label">Est. Quota</span><span class="value" id="quota"></span></div>
+  </div>
+
+  <div class="section-title">Misc</div>
+  <div class="card">
+    <div class="row"><span class="label">Orientation</span><span class="value" id="orient"></span></div>
+    <div class="row"><span class="label">Referrer</span><span class="value" id="referrer"></span></div>
+    <div class="row"><span class="label">Cookies</span><span class="value" id="cookies"></span></div>
+    <div class="row"><span class="label">Standalone (PWA)</span><span class="value" id="pwa"></span></div>
+  </div>
+
+  <!-- ===== PHASE 2: TAP TO TEST ===== -->
+  <div class="section-title">Tap to Test</div>
+
+  <div class="card">
+    <div class="row"><span class="label">Clipboard Write</span><span class="value" id="clipboardStatus"><span class="dot warn"></span>Ready</span></div>
+    <button class="btn" id="clipboardBtn">Copy to Clipboard</button>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Web Share</span><span class="value" id="shareStatus"><span class="dot warn"></span>Ready</span></div>
+    <button class="btn" id="shareBtn">Share This Page</button>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Audio Playback</span><span class="value" id="audioStatus"><span class="dot warn"></span>Ready</span></div>
+    <button class="btn" id="audioBtn">Play Test Tone</button>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Vibration</span><span class="value" id="vibrateStatus"><span class="dot warn"></span>Ready</span></div>
+    <button class="btn" id="vibrateBtn">Test Vibration</button>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">File Picker</span><span class="value" id="fileStatus"><span class="dot warn"></span>Ready</span></div>
+    <button class="btn" id="fileBtn">Open File Picker</button>
+  </div>
+
+  <!-- ===== PHASE 3: PERMISSION REQUIRED ===== -->
+  <div class="section-title">Permission Required</div>
+
+  <div class="card">
+    <div class="row"><span class="label">Location</span><span class="value" id="locStatus"><span class="dot warn"></span>Tap to start</span></div>
+    <button class="btn" id="locBtn">Get Location</button>
+    <div class="detail-block" id="locData" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Orientation</span><span class="value" id="oriStatus"><span class="dot warn"></span>Tap to start</span></div>
+    <button class="btn" id="oriBtn">Enable Orientation</button>
+    <div class="row live-row" id="oriAlpha" style="display:none;"><span class="label">Alpha</span><span class="value" id="oriAlphaVal">—</span></div>
+    <div class="row live-row" id="oriBeta" style="display:none;"><span class="label">Beta</span><span class="value" id="oriBetaVal">—</span></div>
+    <div class="row live-row" id="oriGamma" style="display:none;"><span class="label">Gamma</span><span class="value" id="oriGammaVal">—</span></div>
+    <div class="row live-row" id="oriCompass" style="display:none;"><span class="label">Heading</span><span class="value" id="oriCompassVal">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Motion</span><span class="value" id="motStatus"><span class="dot warn"></span>Tap to start</span></div>
+    <button class="btn" id="motBtn">Enable Motion</button>
+    <div class="row live-row" id="motAccX" style="display:none;"><span class="label">Accel X</span><span class="value" id="motAccXVal">—</span></div>
+    <div class="row live-row" id="motAccY" style="display:none;"><span class="label">Accel Y</span><span class="value" id="motAccYVal">—</span></div>
+    <div class="row live-row" id="motAccZ" style="display:none;"><span class="label">Accel Z</span><span class="value" id="motAccZVal">—</span></div>
+    <div class="row live-row" id="motRotX" style="display:none;"><span class="label">Rot X</span><span class="value" id="motRotXVal">—</span></div>
+    <div class="row live-row" id="motRotY" style="display:none;"><span class="label">Rot Y</span><span class="value" id="motRotYVal">—</span></div>
+    <div class="row live-row" id="motRotZ" style="display:none;"><span class="label">Rot Z</span><span class="value" id="motRotZVal">—</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Camera</span><span class="value" id="camStatus"><span class="dot warn"></span>Tap to start</span></div>
+    <button class="btn" id="camBtn">Open Camera</button>
+    <video class="camera-preview" id="camPreview" autoplay playsinline></video>
+    <div class="detail-block" id="camData" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Microphone</span><span class="value" id="micStatus"><span class="dot warn"></span>Tap to start</span></div>
+    <button class="btn" id="micBtn">Open Microphone</button>
+    <canvas class="meter" id="micMeter"></canvas>
+    <div class="detail-block" id="micData" style="display:none;"></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Bluetooth</span><span class="value no"><span class="dot no"></span>Not on iOS</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">NFC</span><span class="value no"><span class="dot no"></span>Not on iOS</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">Push Notifications</span><span class="value no"><span class="dot no"></span>Not on iOS</span></div>
+  </div>
+
+  <div class="card">
+    <div class="row"><span class="label">WebUSB</span><span class="value no"><span class="dot no"></span>Not on iOS</span></div>
   </div>
 
   <script>
+    // ====== PHASE 1: AUTO-DETECTED ======
+
+    // Identity
     document.getElementById('platform').textContent = navigator.platform || '—';
-    document.getElementById('ua').textContent = navigator.userAgent;
     document.getElementById('lang').textContent = navigator.language;
     document.getElementById('cores').textContent = navigator.hardwareConcurrency || '—';
     document.getElementById('mem').textContent = navigator.deviceMemory ? navigator.deviceMemory + ' GB' : '—';
     document.getElementById('touch').textContent = ('ontouchstart' in window) ? 'Yes' : 'No';
 
-    document.getElementById('width').textContent = screen.width + 'px';
-    document.getElementById('height').textContent = screen.height + 'px';
+    // Screen
+    document.getElementById('res').textContent = screen.width + ' x ' + screen.height;
     document.getElementById('dpr').textContent = window.devicePixelRatio + 'x';
     document.getElementById('color').textContent = screen.colorDepth + '-bit';
     document.getElementById('dark').textContent = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'On' : 'Off';
 
+    // Network
     document.getElementById('online').textContent = navigator.onLine ? 'Online' : 'Offline';
+    if (navigator.connection) {
+      document.getElementById('netType').textContent = navigator.connection.effectiveType || '—';
+      document.getElementById('downlink').textContent = navigator.connection.downlink ? navigator.connection.downlink + ' Mbps' : '—';
+    }
+
+    // GPU
+    try {
+      const c = document.createElement('canvas');
+      const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+      if (gl) {
+        const ext = gl.getExtension('WEBGL_debug_renderer_info');
+        if (ext) {
+          document.getElementById('gpu').textContent = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+          document.getElementById('gpuVendor').textContent = gl.getParameter(ext.UNMASKED_VENDOR_WEBGL);
+        }
+      }
+    } catch (e) {
+      document.getElementById('gpu').textContent = '—';
+      document.getElementById('gpuVendor').textContent = '—';
+    }
+
+    // Audio
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (AC) {
+        const ac = new AC();
+        document.getElementById('audioCtx').textContent = 'Available';
+        document.getElementById('audioCtx').className = 'value ok';
+        document.getElementById('sampleRate').textContent = ac.sampleRate + ' Hz';
+        document.getElementById('channels').textContent = ac.destination.maxChannelCount;
+        ac.close();
+      }
+    } catch (e) {
+      document.getElementById('audioCtx').textContent = 'No';
+      document.getElementById('audioCtx').className = 'value no';
+    }
+
+    // Speech voices
+    function updateVoices() {
+      const v = speechSynthesis.getVoices();
+      document.getElementById('voices').textContent = v.length > 0 ? v.length + ' voices' : '—';
+    }
+    updateVoices();
+    speechSynthesis.onvoiceschanged = updateVoices;
+
+    // Storage
+    try { localStorage.setItem('_t', '1'); localStorage.removeItem('_t'); document.getElementById('ls').textContent = 'Yes'; document.getElementById('ls').className = 'value ok'; }
+    catch (e) { document.getElementById('ls').textContent = 'No'; document.getElementById('ls').className = 'value no'; }
+
+    try {
+      const rq = indexedDB.open('_t');
+      rq.onsuccess = function() { indexedDB.deleteDatabase('_t'); document.getElementById('idb').textContent = 'Yes'; document.getElementById('idb').className = 'value ok'; };
+      rq.onerror = function() { document.getElementById('idb').textContent = 'No'; document.getElementById('idb').className = 'value no'; };
+    } catch (e) { document.getElementById('idb').textContent = 'No'; document.getElementById('idb').className = 'value no'; }
+
+    if (navigator.storage && navigator.storage.estimate) {
+      navigator.storage.estimate().then(function(est) {
+        document.getElementById('quota').textContent = est.quota ? (est.quota / 1e9).toFixed(1) + ' GB' : '—';
+      }).catch(function() { document.getElementById('quota').textContent = '—'; });
+    }
+
+    // Misc
+    const orient = screen.orientation ? screen.orientation.type : (window.orientation + '°' || '—');
+    document.getElementById('orient').textContent = orient;
+    document.getElementById('referrer').textContent = document.referrer || 'Direct';
+    document.getElementById('cookies').textContent = navigator.cookieEnabled ? 'Yes' : 'No';
+    const isStandalone = ('standalone' in window.navigator) ? window.navigator.standalone : window.matchMedia('(display-mode: standalone)').matches;
+    document.getElementById('pwa').textContent = isStandalone ? 'Yes' : 'No';
+    document.getElementById('pwa').className = isStandalone ? 'value ok' : 'value';
+
+    // ====== PHASE 2: TAP TO TEST ======
+
+    // Clipboard
+    document.getElementById('clipboardBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('clipboardStatus');
+      var text = 'Hello from iOS Safari! Timestamp: ' + Date.now();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        btn.disabled = true;
+        btn.textContent = 'Copying...';
+        navigator.clipboard.writeText(text).then(function() {
+          status.innerHTML = '<span class="dot ok"></span>Done';
+          btn.textContent = 'Copied!';
+          setTimeout(function() { btn.textContent = 'Copy to Clipboard'; btn.disabled = false; }, 1500);
+        }).catch(function() {
+          status.innerHTML = '<span class="dot no"></span>Blocked';
+          btn.textContent = 'Failed';
+        });
+      } else {
+        status.innerHTML = '<span class="dot no"></span>Not available';
+      }
+    });
+
+    // Web Share
+    document.getElementById('shareBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('shareStatus');
+      if (navigator.share) {
+        btn.disabled = true;
+        navigator.share({ title: 'API Explorer', url: window.location.href }).then(function() {
+          status.innerHTML = '<span class="dot ok"></span>Shared';
+        }).catch(function(err) {
+          status.innerHTML = err.name === 'AbortError' ? '<span class="dot warn"></span>Cancelled' : '<span class="dot no"></span>Failed';
+        }).finally(function() { btn.disabled = false; });
+      } else {
+        status.innerHTML = '<span class="dot no"></span>Not available';
+      }
+    });
+
+    // Audio playback
+    document.getElementById('audioBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('audioStatus');
+      btn.disabled = true;
+      btn.textContent = 'Playing...';
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        var ac = new AC();
+        var osc = ac.createOscillator();
+        var gain = ac.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 440;
+        gain.gain.value = 0.3;
+        osc.connect(gain);
+        gain.connect(ac.destination);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + 0.8);
+        osc.stop(ac.currentTime + 0.8);
+        setTimeout(function() {
+          status.innerHTML = '<span class="dot ok"></span>Played';
+          btn.textContent = 'Play Test Tone';
+          btn.disabled = false;
+          ac.close();
+        }, 900);
+      } catch (e) {
+        status.innerHTML = '<span class="dot no"></span>Failed';
+        btn.textContent = 'Play Test Tone';
+        btn.disabled = false;
+      }
+    });
+
+    // Vibration
+    document.getElementById('vibrateBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('vibrateStatus');
+      if (navigator.vibrate) {
+        navigator.vibrate(200);
+        status.innerHTML = '<span class="dot ok"></span>Fired';
+        btn.textContent = 'Done';
+      } else {
+        status.innerHTML = '<span class="dot no"></span>Not on iOS';
+        btn.textContent = 'Not Available';
+        btn.disabled = true;
+      }
+    });
+
+    // File picker
+    document.getElementById('fileBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('fileStatus');
+      var input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*,.pdf';
+      input.onchange = function() {
+        var file = input.files[0];
+        if (file) {
+          status.innerHTML = '<span class="dot ok"></span>Got file';
+          btn.textContent = 'Got: ' + file.name;
+          setTimeout(function() { btn.textContent = 'Open File Picker'; }, 2000);
+        }
+      };
+      input.oncancel = function() {
+        status.innerHTML = '<span class="dot warn"></span>Cancelled';
+      };
+      input.click();
+    });
+
+    // ====== PHASE 3: PERMISSION REQUIRED ======
+
+    // Geolocation
+    document.getElementById('locBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('locStatus');
+      var data = document.getElementById('locData');
+      if (!navigator.geolocation) {
+        status.innerHTML = '<span class="dot no"></span>Not available';
+        btn.disabled = true;
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Requesting...';
+      navigator.geolocation.getCurrentPosition(function(pos) {
+        status.innerHTML = '<span class="dot ok"></span>Got it';
+        btn.textContent = 'Got Location';
+        data.style.display = 'block';
+        data.innerHTML =
+          '<div>Lat: <b>' + pos.coords.latitude.toFixed(6) + '</b></div>' +
+          '<div>Lng: <b>' + pos.coords.longitude.toFixed(6) + '</b></div>' +
+          '<div>Accuracy: <b>' + pos.coords.accuracy.toFixed(0) + 'm</b></div>' +
+          '<div>Altitude: <b>' + (pos.coords.altitude ? pos.coords.altitude.toFixed(1) + 'm' : '—') + '</b></div>' +
+          '<div>Speed: <b>' + (pos.coords.speed ? pos.coords.speed.toFixed(1) + 'm/s' : '—') + '</b></div>' +
+          '<div>Heading: <b>' + (pos.coords.heading ? pos.coords.heading.toFixed(1) + '°' : '—') + '</b></div>';
+      }, function(err) {
+        status.innerHTML = '<span class="dot no"></span>' + err.message;
+        btn.textContent = 'Retry';
+        btn.disabled = false;
+      }, { enableHighAccuracy: true });
+    });
+
+    // Device Orientation
+    document.getElementById('oriBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('oriStatus');
+      btn.disabled = true;
+
+      function handler(e) {
+        status.innerHTML = '<span class="dot ok"></span>Active';
+        document.getElementById('oriAlpha').style.display = 'flex';
+        document.getElementById('oriBeta').style.display = 'flex';
+        document.getElementById('oriGamma').style.display = 'flex';
+        document.getElementById('oriCompass').style.display = 'flex';
+        document.getElementById('oriAlphaVal').textContent = (e.alpha !== null ? e.alpha.toFixed(1) + '°' : '—');
+        document.getElementById('oriBetaVal').textContent = (e.beta !== null ? e.beta.toFixed(1) + '°' : '—');
+        document.getElementById('oriGammaVal').textContent = (e.gamma !== null ? e.gamma.toFixed(1) + '°' : '—');
+        document.getElementById('oriCompassVal').textContent = (e.webkitCompassHeading !== null ? e.webkitCompassHeading.toFixed(1) + '°' : '—');
+      }
+
+      if (typeof DeviceOrientationEvent !== 'undefined' && typeof DeviceOrientationEvent.requestPermission === 'function') {
+        DeviceOrientationEvent.requestPermission().then(function(state) {
+          if (state === 'granted') {
+            window.addEventListener('deviceorientation', handler);
+            btn.textContent = 'Active';
+          } else {
+            status.innerHTML = '<span class="dot no"></span>Denied';
+            btn.textContent = 'Denied';
+          }
+        }).catch(function() {
+          status.innerHTML = '<span class="dot no"></span>Error';
+          btn.textContent = 'Retry';
+          btn.disabled = false;
+        });
+      } else if ('DeviceOrientationEvent' in window) {
+        window.addEventListener('deviceorientation', handler);
+        btn.textContent = 'Active';
+      } else {
+        status.innerHTML = '<span class="dot no"></span>Not available';
+        btn.textContent = 'Not Available';
+      }
+    });
+
+    // Device Motion
+    document.getElementById('motBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('motStatus');
+      btn.disabled = true;
+
+      function handler(e) {
+        status.innerHTML = '<span class="dot ok"></span>Active';
+        ['motAccX','motAccY','motAccZ','motRotX','motRotY','motRotZ'].forEach(function(id) {
+          document.getElementById(id).style.display = 'flex';
+        });
+        var a = e.accelerationIncludingGravity || {};
+        var r = e.rotationRate || {};
+        document.getElementById('motAccXVal').textContent = (a.x !== null ? a.x.toFixed(2) + ' m/s²' : '—');
+        document.getElementById('motAccYVal').textContent = (a.y !== null ? a.y.toFixed(2) + ' m/s²' : '—');
+        document.getElementById('motAccZVal').textContent = (a.z !== null ? a.z.toFixed(2) + ' m/s²' : '—');
+        document.getElementById('motRotXVal').textContent = (r.alpha !== null ? r.alpha.toFixed(1) + ' °/s' : '—');
+        document.getElementById('motRotYVal').textContent = (r.beta !== null ? r.beta.toFixed(1) + ' °/s' : '—');
+        document.getElementById('motRotZVal').textContent = (r.gamma !== null ? r.gamma.toFixed(1) + ' °/s' : '—');
+      }
+
+      if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission().then(function(state) {
+          if (state === 'granted') {
+            window.addEventListener('devicemotion', handler);
+            btn.textContent = 'Active';
+          } else {
+            status.innerHTML = '<span class="dot no"></span>Denied';
+            btn.textContent = 'Denied';
+          }
+        }).catch(function() {
+          status.innerHTML = '<span class="dot no"></span>Error';
+          btn.textContent = 'Retry';
+          btn.disabled = false;
+        });
+      } else if ('DeviceMotionEvent' in window) {
+        window.addEventListener('devicemotion', handler);
+        btn.textContent = 'Active';
+      } else {
+        status.innerHTML = '<span class="dot no"></span>Not available';
+        btn.textContent = 'Not Available';
+      }
+    });
+
+    // Camera
+    document.getElementById('camBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('camStatus');
+      var video = document.getElementById('camPreview');
+      var data = document.getElementById('camData');
+      btn.disabled = true;
+      btn.textContent = 'Requesting...';
+
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' } }).then(function(stream) {
+        status.innerHTML = '<span class="dot ok"></span>Active';
+        btn.textContent = 'Active';
+        video.style.display = 'block';
+        video.srcObject = stream;
+
+        var track = stream.getVideoTracks()[0];
+        var settings = track.getSettings();
+        data.style.display = 'block';
+        data.innerHTML =
+          '<div>Camera: <b>' + track.label + '</b></div>' +
+          '<div>Resolution: <b>' + settings.width + ' x ' + settings.height + '</b></div>' +
+          '<div>FPS: <b>' + settings.frameRate + '</b></div>' +
+          '<div>Devices: <b>' + 'check below</b></div>';
+
+        navigator.mediaDevices.enumerateDevices().then(function(devices) {
+          var cams = devices.filter(function(d) { return d.kind === 'videoinput'; });
+          data.innerHTML += '<div style="margin-top:8px;">Found cameras (' + cams.length + '):</div>';
+          cams.forEach(function(cam, i) {
+            data.innerHTML += '<div class="mono">  ' + (i+1) + '. ' + cam.label + '</div>';
+          });
+        });
+      }).catch(function(err) {
+        status.innerHTML = '<span class="dot no"></span>' + err.name;
+        btn.textContent = 'Retry';
+        btn.disabled = false;
+      });
+    });
+
+    // Microphone
+    var micStream = null;
+    document.getElementById('micBtn').addEventListener('click', function() {
+      var btn = this;
+      var status = document.getElementById('micStatus');
+      var canvas = document.getElementById('micMeter');
+      var data = document.getElementById('micData');
+      btn.disabled = true;
+      btn.textContent = 'Requesting...';
+
+      navigator.mediaDevices.getUserMedia({ audio: true }).then(function(stream) {
+        micStream = stream;
+        status.innerHTML = '<span class="dot ok"></span>Active';
+        btn.textContent = 'Active';
+        canvas.style.display = 'block';
+
+        var ctx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth * 2;
+        canvas.height = 16;
+
+        var audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        var source = audioCtx.createMediaStreamSource(stream);
+        var analyser = audioCtx.createAnalyser();
+        analyser.fftSize = 256;
+        source.connect(analyser);
+
+        var buf = new Uint8Array(analyser.frequencyBinCount);
+
+        function draw() {
+          if (!micStream) return;
+          analyser.getByteFrequencyData(buf);
+          var avg = buf.reduce(function(a, b) { return a + b; }) / buf.length;
+          var level = avg / 255;
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          ctx.fillStyle = level > 0.5 ? '#ff3b30' : level > 0.2 ? '#ff9500' : '#34c759';
+          ctx.fillRect(0, 0, canvas.width * level, canvas.height);
+          data.style.display = 'block';
+          data.innerHTML = '<div>Level: <b>' + (level * 100).toFixed(0) + '%</b></div>';
+          requestAnimationFrame(draw);
+        }
+        draw();
+
+        var track = stream.getAudioTracks()[0];
+        var settings = track.getSettings();
+        data.innerHTML = '<div>Mic: <b>' + track.label + '</b></div>' +
+          '<div>Sample Rate: <b>' + settings.sampleRate + ' Hz</b></div>' +
+          '<div>Channels: <b>' + settings.channelCount + '</b></div>';
+      }).catch(function(err) {
+        status.innerHTML = '<span class="dot no"></span>' + err.name;
+        btn.textContent = 'Retry';
+        btn.disabled = false;
+      });
+    });
   </script>
 </body>
 </html>
